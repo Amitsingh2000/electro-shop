@@ -1,17 +1,51 @@
-import React from 'react';
-import { TrendingUpIcon, UsersIcon, PackageIcon, ShoppingCartIcon, DollarSignIcon } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import {
+  TrendingUpIcon,
+  UsersIcon,
+  PackageIcon,
+  ShoppingCartIcon,
+  DollarSignIcon
+} from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
-import { products } from '../../data/products';
-import { orders } from '../../data/orders';
+import { Order } from '../../types/order';
+import { Product } from '../../types/product';
+import axios from 'axios';
 
 export const AdminDashboard: React.FC = () => {
-  // Calculate stats from orders data
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-  const totalOrders = orders.length;
-  const totalProducts = products.length;
-  const totalUsers = 450; // Mock data
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [totalUsers, setTotalUsers] = useState<number>(0); // Assume this comes from /api/users
+  const [loading, setLoading] = useState(true);
 
-  const recentOrders = orders
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [ordersRes, productsRes, usersRes] = await Promise.all([
+          axios.get('/api/orders', {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }),
+          axios.get('/api/products'),
+          axios.get('/api/users', {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          }),
+        ]);
+
+        setOrders(ordersRes.data);
+        setProducts(productsRes.data);
+        setTotalUsers(usersRes.data.length);
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+
+  const recentOrders = [...orders]
     .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime())
     .slice(0, 4)
     .map(order => ({
@@ -19,13 +53,16 @@ export const AdminDashboard: React.FC = () => {
       customer: order.customerName,
       amount: order.total,
       status: order.status,
-      date: new Date(order.orderDate).toLocaleDateString()
+      date: new Date(order.orderDate).toLocaleDateString(),
     }));
 
-  const topProducts = products.slice(0, 5).map(product => ({
-    ...product,
-    sales: Math.floor(Math.random() * 100) + 20
-  }));
+  const topProducts = [...products]
+    .sort((a, b) => b.reviews - a.reviews)
+    .slice(0, 5)
+    .map(product => ({
+      ...product,
+      sales: Math.floor(Math.random() * 100) + 20,
+    }));
 
   const statCards = [
     {
@@ -34,35 +71,35 @@ export const AdminDashboard: React.FC = () => {
       icon: DollarSignIcon,
       color: 'text-green-600',
       bgColor: 'bg-green-100',
-      change: '+12.5%'
+      change: '+12.5%',
     },
     {
       title: 'Total Orders',
-      value: totalOrders.toLocaleString(),
+      value: orders.length.toString(),
       icon: ShoppingCartIcon,
       color: 'text-blue-600',
       bgColor: 'bg-blue-100',
-      change: '+8.2%'
+      change: '+8.2%',
     },
     {
       title: 'Total Products',
-      value: totalProducts.toString(),
+      value: products.length.toString(),
       icon: PackageIcon,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100',
-      change: '+2.1%'
+      change: '+2.1%',
     },
     {
       title: 'Total Users',
-      value: totalUsers.toLocaleString(),
+      value: totalUsers.toString(),
       icon: UsersIcon,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',
-      change: '+15.3%'
+      change: '+15.3%',
     },
   ];
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: Order['status']) => {
     switch (status) {
       case 'delivered': return 'bg-green-100 text-green-800';
       case 'shipped': return 'bg-blue-100 text-blue-800';
@@ -74,9 +111,13 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return <div className="text-center py-12 text-gray-500">Loading dashboard...</div>;
+  }
+
   return (
     <div className="space-y-6">
-      {/* Stats Grid */}
+      {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statCards.map((stat, index) => (
           <Card key={index}>
@@ -99,6 +140,7 @@ export const AdminDashboard: React.FC = () => {
         ))}
       </div>
 
+      {/* Orders and Products */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Orders */}
         <Card>
@@ -109,7 +151,9 @@ export const AdminDashboard: React.FC = () => {
                 <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900">{order.customer}</p>
-                    <p className="text-sm text-gray-500">{order.id} • {order.date}</p>
+                    <p className="text-sm text-gray-500">
+                      {order.id} • {order.date}
+                    </p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-gray-900">₹{order.amount.toLocaleString()}</p>

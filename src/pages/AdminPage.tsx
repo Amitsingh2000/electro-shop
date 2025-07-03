@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeftIcon, PlusIcon, EditIcon, TrashIcon, UsersIcon, PackageIcon, BarChart3Icon, ShoppingCartIcon } from 'lucide-react';
+import {
+  ArrowLeftIcon,
+  UsersIcon,
+  PackageIcon,
+  BarChart3Icon,
+  ShoppingCartIcon,
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -16,36 +22,36 @@ export const AdminPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
 
-  // Check if user is admin (in real app, this would be from user role)
+  // 🔒 Check admin role (can be upgraded later)
   const isAdmin = user?.email === 'admin@electroshop.com' || user?.email?.includes('admin');
 
   if (!isAuthenticated || !isAdmin) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="max-w-md w-full">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <Card className="max-w-md w-full shadow-lg">
           <CardContent className="p-8 text-center">
             <div className="text-red-500 text-6xl mb-4">🚫</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-            <p className="text-gray-600 mb-6">You don't have permission to access the admin panel.</p>
-            <div className="space-y-2">
-              <Button onClick={() => navigate('/')} className="w-full">
-                Go to Homepage
-              </Button>
-              <p className="text-sm text-gray-500">
-                Demo admin: admin@electroshop.com / admin123
-              </p>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+            <p className="text-gray-600 mb-6">
+              You don't have permission to access the admin panel.
+            </p>
+            <Button onClick={() => navigate('/')} className="w-full mb-2">
+              Go to Homepage
+            </Button>
+            <p className="text-sm text-gray-500">
+              Demo admin: <strong>admin@electroshop.com</strong> / <strong>admin123</strong>
+            </p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const tabs = [
-    { id: 'dashboard' as AdminTab, name: 'Dashboard', icon: BarChart3Icon },
-    { id: 'orders' as AdminTab, name: 'Orders', icon: ShoppingCartIcon },
-    { id: 'products' as AdminTab, name: 'Products', icon: PackageIcon },
-    { id: 'users' as AdminTab, name: 'Users', icon: UsersIcon },
+  const tabs: { id: AdminTab; name: string; icon: React.ElementType }[] = [
+    { id: 'dashboard', name: 'Dashboard', icon: BarChart3Icon },
+    { id: 'orders', name: 'Orders', icon: ShoppingCartIcon },
+    { id: 'products', name: 'Products', icon: PackageIcon },
+    { id: 'users', name: 'Users', icon: UsersIcon },
   ];
 
   return (
@@ -63,31 +69,31 @@ export const AdminPage: React.FC = () => {
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-500">Welcome back,</p>
-            <p className="font-semibold text-gray-900">{user?.name}</p>
+            <p className="font-semibold text-gray-900">{user?.name || 'Admin'}</p>
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Tabs */}
         <div className="border-b border-gray-200 mb-8">
-          <nav className="-mb-px flex space-x-8">
-            {tabs.map((tab) => (
+          <nav className="-mb-px flex flex-wrap space-x-4">
+            {tabs.map(({ id, name, icon: Icon }) => (
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`flex items-center py-2 px-3 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === id
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                <tab.icon className="w-5 h-5 mr-2" />
-                {tab.name}
+                <Icon className="w-5 h-5 mr-2" />
+                {name}
               </button>
             ))}
           </nav>
         </div>
 
-        {/* Tab Content */}
+        {/* Content */}
         <div className="space-y-6">
           {activeTab === 'dashboard' && <AdminDashboard />}
           {activeTab === 'orders' && <OrderManagement />}

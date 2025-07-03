@@ -1,46 +1,74 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PlusIcon, EditIcon, TrashIcon, SearchIcon } from 'lucide-react';
-import { products as initialProducts } from '../../data/products';
 import { Product } from '../../types/product';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { ProductForm } from './ProductForm';
+import axios from 'axios';
 
 export const ProductManagement: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Fetch products on mount
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
-  const handleAddProduct = (productData: Omit<Product, 'id'>) => {
-    const newProduct: Product = {
-      ...productData,
-      id: Math.max(...products.map(p => p.id)) + 1,
-    };
-    setProducts([...products, newProduct]);
+  const fetchProducts = async () => {
+    try {
+      const res = await axios.get<Product[]>('/api/products');
+      setProducts(res.data);
+    } catch (err) {
+      console.error('Failed to fetch products:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const token = localStorage.getItem('token');
+
+const handleAddProduct = async (productData: Omit<Product, 'id'>) => {
+  try {
+    await axios.post('/api/products', productData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    fetchProducts();
     setShowForm(false);
-  };
+  } catch (err) {
+    console.error('Add product failed:', err);
+  }
+};
 
-  const handleEditProduct = (productData: Omit<Product, 'id'>) => {
-    if (editingProduct) {
-      setProducts(products.map(p => 
-        p.id === editingProduct.id ? { ...productData, id: editingProduct.id } : p
-      ));
-      setEditingProduct(null);
-      setShowForm(false);
-    }
-  };
+const handleEditProduct = async (productData: Omit<Product, 'id'>) => {
+  if (!editingProduct) return;
+  try {
+    await axios.put(`/api/products/${editingProduct.id}`, productData, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    fetchProducts();
+    setEditingProduct(null);
+    setShowForm(false);
+  } catch (err) {
+    console.error('Edit product failed:', err);
+  }
+};
 
-  const handleDeleteProduct = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      setProducts(products.filter(p => p.id !== id));
-    }
-  };
+const handleDeleteProduct = async (id: number) => {
+  if (!window.confirm('Are you sure you want to delete this product?')) return;
+  try {
+    await axios.delete(`/api/products/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    fetchProducts();
+  } catch (err) {
+    console.error('Delete product failed:', err);
+  }
+};
+
 
   const openEditForm = (product: Product) => {
     setEditingProduct(product);
@@ -52,12 +80,20 @@ export const ProductManagement: React.FC = () => {
     setEditingProduct(null);
   };
 
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (showForm) {
     return (
       <ProductForm
         product={editingProduct}
-        onSubmit={editingProduct ? handleEditProduct : handleAddProduct}
         onCancel={closeForm}
+        onSuccess={() => {
+          fetchProducts();
+          closeForm();
+        }}
       />
     );
   }
@@ -89,72 +125,78 @@ export const ProductManagement: React.FC = () => {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product) => (
-          <Card key={product.id} className="overflow-hidden">
-            <div className="aspect-square bg-gray-100">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <CardContent className="p-4">
-              <div className="space-y-2">
-                <h3 className="font-semibold text-gray-900 line-clamp-2">{product.name}</h3>
-                <p className="text-sm text-gray-500 capitalize">{product.category}</p>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-lg font-bold text-gray-900">
-                      ₹{product.currentPrice.toLocaleString()}
-                    </span>
-                    {product.originalPrice && (
-                      <span className="text-sm text-gray-500 line-through ml-2">
-                        ₹{product.originalPrice.toLocaleString()}
+      {loading ? (
+        <div className="text-center py-12 text-gray-500">Loading products...</div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredProducts.map((product) => (
+              <Card key={product.id} className="overflow-hidden">
+                <div className="aspect-square bg-gray-100">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-gray-900 line-clamp-2">{product.name}</h3>
+                    <p className="text-sm text-gray-500 capitalize">{product.category}</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-lg font-bold text-gray-900">
+                          ₹{product.currentPrice.toLocaleString()}
+                        </span>
+                        {product.originalPrice && (
+                          <span className="text-sm text-gray-500 line-through ml-2">
+                            ₹{product.originalPrice.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {product.inStock ? 'In Stock' : 'Out of Stock'}
                       </span>
-                    )}
+                    </div>
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="flex items-center space-x-1">
+                        <span className="text-yellow-400">★</span>
+                        <span className="text-sm text-gray-600">{product.rating} ({product.reviews})</span>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditForm(product)}
+                        >
+                          <EditIcon className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {product.inStock ? 'In Stock' : 'Out of Stock'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex items-center space-x-1">
-                    <span className="text-yellow-400">★</span>
-                    <span className="text-sm text-gray-600">{product.rating} ({product.reviews})</span>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openEditForm(product)}
-                    >
-                      <EditIcon className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-      {filteredProducts.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 text-6xl mb-4">📦</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
-          <p className="text-gray-600">Try adjusting your search or add a new product</p>
-        </div>
+          {filteredProducts.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 text-6xl mb-4">📦</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
+              <p className="text-gray-600">Try adjusting your search or add a new product</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

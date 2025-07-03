@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "id": "34aea768-95b0-4daf-9a86-582fae78735e",
+    "name": "Admin",
+    "email": "admin@electroshop.com",
+    "password": "$2b$10$Tf18xic.mBTDrWZZ0ymmRuCqHvTN6WtgNKz99E5/qXSzc.NgR7ArW",
+    "isAdmin": true
+  },
+  {
+    "id": "5fe5de07-b0a9-4f68-b0f2-9421545dacf7",
+    "name": "Demo",
+    "email": "demo@gmail.com",
+    "password": "$2b$10$xu74AAnUpJRLUIZf6.MkPejnxlZD.yq2G5ov8sBfNvT.PIroFPNpi",
+    "isAdmin": false,
+    "isActive": true
+  }
+]
