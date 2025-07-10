@@ -38,10 +38,7 @@ export const AdminPage: React.FC = () => {
             <Button onClick={() => navigate('/')} className="w-full mb-2">
               Go to Homepage
             </Button>
-            <p className="text-sm text-gray-500">
-              Demo admin: <strong>admin@electroshop.com</strong> / <strong>admin123</strong>
-            </p>
-          </CardContent>
+            </CardContent>
         </Card>
       </div>
     );

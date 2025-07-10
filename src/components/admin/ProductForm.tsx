@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ArrowLeftIcon } from 'lucide-react';
 import { Product } from '../../types/product';
-import { categories } from '../../data/products';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import axios from 'axios';
@@ -13,6 +12,18 @@ interface ProductFormProps {
 }
 
 export const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onSuccess }) => {
+  
+  const categories = [
+    'Smartphones',
+    'Laptops',
+    'Tablets',
+    'Accessories',
+    'Headphones',
+    'Gaming',
+    'Wearables',
+    'Home Appliances',
+  ];
+
   const [formData, setFormData] = useState({
     name: product?.name || '',
     image: product?.image || '',
@@ -22,13 +33,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onS
     rating: product?.rating || 5,
     reviews: product?.reviews || 0,
     description: product?.description || '',
-    category: product?.category || categories[0].name,
+    category: product?.category || categories[0],
     inStock: product?.inStock ?? true,
     features: product?.features?.join('\n') || '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -200,8 +212,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onS
                   className="w-full px-3 py-2 border border-gray-300 rounded"
                 >
                   {categories.map((c, idx) => (
-                    <option key={idx} value={c.name}>
-                      {c.name}
+                    <option key={idx} value={c}>
+                      {c}
                     </option>
                   ))}
                 </select>
@@ -230,7 +242,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onCancel, onS
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Features (one per line)</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Features (one per line)
+              </label>
               <textarea
                 name="features"
                 rows={4}

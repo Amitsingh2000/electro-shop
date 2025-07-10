@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeftIcon, HeartIcon, ShareIcon, TruckIcon, ShieldCheckIcon, RotateCcwIcon } from 'lucide-react';
-import { products } from '../data/products';
+import {
+  ArrowLeftIcon,
+  HeartIcon,
+  ShareIcon,
+  TruckIcon,
+  ShieldCheckIcon,
+  RotateCcwIcon,
+} from 'lucide-react';
+import axios from 'axios';
+import { Product } from '../types/product';
 import { useCart } from '../context/CartContext';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -10,10 +18,59 @@ import { ProductCard } from '../components/product/ProductCard';
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart } = useCart();
-  const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
 
-  const product = products.find(p => p.id === Number(id));
+  const [product, setProduct] = useState<Product | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProductAndRelated = async () => {
+      try {
+        const { data: productData } = await axios.get(`/api/products/${id}`);
+        setProduct(productData);
+
+        const { data: allProducts } = await axios.get('/api/products');
+        const related = allProducts
+          .filter((p: Product) => p.category === productData.category && p.id !== productData.id)
+          .slice(0, 4);
+        setRelatedProducts(related);
+      } catch (err) {
+        console.error('Error fetching product:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductAndRelated();
+  }, [id]);
+
+  const handleAddToCart = () => {
+    if (product) {
+      for (let i = 0; i < quantity; i++) {
+        addToCart(product);
+      }
+    }
+  };
+
+  const renderStars = (rating: number) => (
+    <>
+      {Array.from({ length: 5 }, (_, i) => (
+        <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>
+          ★
+        </span>
+      ))}
+    </>
+  );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <p>Loading product...</p>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -28,48 +85,23 @@ export const ProductDetailPage: React.FC = () => {
     );
   }
 
-  const relatedProducts = products
-    .filter(p => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
-
-  const handleAddToCart = () => {
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product);
-    }
-  };
-
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>
-        ★
-      </span>
-    ));
-  };
-
-  // Mock additional images for demonstration
-  const productImages = [
-    product.image,
-    product.image,
-    product.image,
-  ];
+  const productImages = [product.image, product.image, product.image];
 
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-8">
           <Link to="/" className="hover:text-blue-600">Home</Link>
           <span>/</span>
           <Link to="/products" className="hover:text-blue-600">Products</Link>
           <span>/</span>
-          <Link to={`/products?category=${product.category}`} className="hover:text-blue-600">
-            {product.category}
-          </Link>
+          <Link to={`/products?category=${product.category}`} className="hover:text-blue-600">{product.category}</Link>
           <span>/</span>
           <span className="text-gray-900">{product.name}</span>
         </nav>
 
-        {/* Back Button */}
         <Link to="/products" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8">
           <ArrowLeftIcon className="w-4 h-4 mr-2" />
           Back to Products
@@ -86,19 +118,14 @@ export const ProductDetailPage: React.FC = () => {
               />
             </div>
             <div className="grid grid-cols-3 gap-4">
-              {productImages.map((image, index) => (
+              {productImages.map((img, i) => (
                 <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 ${
-                    selectedImage === index ? 'border-blue-500' : 'border-transparent'
-                  }`}
+                  key={i}
+                  onClick={() => setSelectedImage(i)}
+                  className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 ${selectedImage === i ? 'border-blue-500' : 'border-transparent'
+                    }`}
                 >
-                  <img
-                    src={image}
-                    alt={`${product.name} ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
@@ -110,26 +137,22 @@ export const ProductDetailPage: React.FC = () => {
               <div className="flex items-center justify-between mb-2">
                 <Badge variant="secondary" className="mb-2">{product.category}</Badge>
                 <div className="flex items-center space-x-2">
-                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <button className="p-2 hover:bg-gray-100 rounded-lg">
                     <HeartIcon className="w-5 h-5 text-gray-600" />
                   </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <button className="p-2 hover:bg-gray-100 rounded-lg">
                     <ShareIcon className="w-5 h-5 text-gray-600" />
                   </button>
                 </div>
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
-              
-              {/* Rating */}
               <div className="flex items-center space-x-2 mb-4">
-                <div className="flex text-lg">
-                  {renderStars(product.rating)}
-                </div>
+                <div className="flex text-lg">{renderStars(product.rating)}</div>
                 <span className="text-gray-600">({product.reviews} reviews)</span>
               </div>
             </div>
 
-            {/* Price */}
+            {/* Pricing */}
             <div className="space-y-2">
               <div className="flex items-center space-x-4">
                 <span className="text-3xl font-bold text-gray-900">
@@ -151,28 +174,25 @@ export const ProductDetailPage: React.FC = () => {
               )}
             </div>
 
-            {/* Stock Status */}
             <div className="flex items-center space-x-2">
-              <div className={`w-3 h-3 rounded-full ${product.inStock ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <div className={`w-3 h-3 rounded-full ${product.inStock ? 'bg-green-500' : 'bg-red-500'}`} />
               <span className={`font-medium ${product.inStock ? 'text-green-700' : 'text-red-700'}`}>
                 {product.inStock ? 'In Stock' : 'Out of Stock'}
               </span>
             </div>
 
-            {/* Description */}
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Description</h3>
               <p className="text-gray-600 leading-relaxed">{product.description}</p>
             </div>
 
-            {/* Features */}
-            {product.features && (
+            {Array.isArray(product.features) && product.features.length > 0 && (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Key Features</h3>
                 <ul className="space-y-2">
                   {product.features.map((feature, index) => (
                     <li key={index} className="flex items-center text-gray-600">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full mr-3" />
                       {feature}
                     </li>
                   ))}
@@ -180,24 +200,15 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* Quantity and Add to Cart */}
+
+            {/* Quantity + Actions */}
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
                 <label className="text-sm font-medium text-gray-700">Quantity:</label>
                 <div className="flex items-center border border-gray-300 rounded-lg">
-                  <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-3 py-2 hover:bg-gray-100 transition-colors"
-                  >
-                    -
-                  </button>
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-2 hover:bg-gray-100">-</button>
                   <span className="px-4 py-2 border-x border-gray-300">{quantity}</span>
-                  <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="px-3 py-2 hover:bg-gray-100 transition-colors"
-                  >
-                    +
-                  </button>
+                  <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-2 hover:bg-gray-100">+</button>
                 </div>
               </div>
 
@@ -210,11 +221,7 @@ export const ProductDetailPage: React.FC = () => {
                 >
                   Add to Cart
                 </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1 py-3"
-                  size="lg"
-                >
+                <Button variant="outline" className="flex-1 py-3" size="lg">
                   Buy Now
                 </Button>
               </div>

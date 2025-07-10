@@ -1,14 +1,67 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRightIcon, TruckIcon, ShieldCheckIcon, HeadphonesIcon } from 'lucide-react';
-import { products, categories } from '../data/products';
+import {
+  ArrowRightIcon,
+  TruckIcon,
+  ShieldCheckIcon,
+  HeadphonesIcon,
+  Smartphone,
+  Tv,
+  Watch,
+  Camera,
+  Laptop,
+  Tablet
+} from 'lucide-react';
+import axios from 'axios';
+import { Product } from '../types/product';
 import { ProductCard } from '../components/product/ProductCard';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 
+const categoryIcons: Record<string, JSX.Element> = {
+  smartphones: <Smartphone className="w-8 h-8 text-blue-600" />,
+  phones: <Smartphone className="w-8 h-8 text-blue-600" />,
+  tvs: <Tv className="w-8 h-8 text-blue-600" />,
+  watches: <Watch className="w-8 h-8 text-blue-600" />,
+  cameras: <Camera className="w-8 h-8 text-blue-600" />,
+  laptops: <Laptop className="w-8 h-8 text-blue-600" />,
+  tablets: <Tablet className="w-8 h-8 text-blue-600" />,
+};
+
 export const HomePage: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get<Product[]>('/api/products');
+        setProducts(res.data);
+
+        // Shuffle and select 4 random products for featured section
+        const shuffled = [...res.data].sort(() => 0.5 - Math.random());
+        setFeaturedProducts(shuffled.slice(0, 4));
+      } catch (err) {
+        console.error('Failed to load products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const getIconForCategory = (category: string) =>
+    categoryIcons[category.toLowerCase()] ?? (
+      <ShieldCheckIcon className="w-8 h-8 text-blue-600" />
+    );
+
+  const uniqueCategories = Array.from(
+    new Set(products.map((product) => product.category.toLowerCase()))
+  );
+
   const flashSaleProducts = products.slice(0, 4);
-  const featuredProducts = products.slice(4, 8);
 
   const serviceFeatures = [
     {
@@ -67,11 +120,13 @@ export const HomePage: React.FC = () => {
             <div className="w-4 h-10 bg-blue-600 rounded-lg mr-4"></div>
             <h2 className="text-blue-600 text-2xl font-semibold">Today's</h2>
           </div>
-          
+
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 md:mb-0">Flash Sales</h1>
-            
-            {/* Countdown Timer */}
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 md:mb-0">
+              Flash Sales
+            </h1>
+
+            {/* Countdown */}
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-2">Ends in:</div>
               <div className="flex space-x-4 text-2xl font-bold">
@@ -121,16 +176,20 @@ export const HomePage: React.FC = () => {
             <div className="w-4 h-10 bg-blue-600 rounded-lg mr-4"></div>
             <h2 className="text-blue-600 text-2xl font-semibold">Categories</h2>
           </div>
-          
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12">Browse By Category</h1>
+
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12">
+            Browse By Category
+          </h1>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            {categories.map((category) => (
-              <Link key={category.id} to={`/products?category=${category.name}`}>
+            {uniqueCategories.map((category) => (
+              <Link key={category} to={`/products?category=${category}`}>
                 <Card className="h-32 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer border-2 hover:border-blue-500">
                   <CardContent className="flex flex-col items-center justify-center h-full p-4">
-                    <div className="text-3xl mb-2">{category.icon}</div>
-                    <h3 className="font-medium text-gray-900 text-center">{category.name}</h3>
+                    <div className="text-3xl mb-2">{getIconForCategory(category)}</div>
+                    <h3 className="font-medium text-gray-900 text-center capitalize">
+                      {category}
+                    </h3>
                   </CardContent>
                 </Card>
               </Link>
@@ -143,7 +202,9 @@ export const HomePage: React.FC = () => {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Featured Products</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Featured Products
+            </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Discover our handpicked selection of premium electronics and gadgets
             </p>

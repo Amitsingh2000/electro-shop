@@ -14,5 +14,21 @@
       "Demo"
     ],
     "id": "1751530999817"
+  },
+  {
+    "name": "Sony LED",
+    "image": "https://www.avitdigital.com/cdn/shop/files/01-43X80L-logo-v2_1024x1024_2x_de8aa809-103d-47c7-a87b-4faf0709cd4e_grande.jpg?v=1683793693",
+    "currentPrice": 45000,
+    "originalPrice": 85000,
+    "discount": "50",
+    "rating": 5,
+    "reviews": 142,
+    "description": "Demo",
+    "category": "Computer",
+    "inStock": true,
+    "features": [
+      "4K"
+    ],
+    "id": "1751532830321"
   }
 ]
