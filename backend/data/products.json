@@ -30,5 +30,22 @@
       "4K"
     ],
     "id": "1751532830321"
+  },
+  {
+    "name": "LG",
+    "image": "https://d3fppka8t5rpz7.cloudfront.net/filters:format(webp)/dev/images/01-1600-29072019-v1.jpg",
+    "currentPrice": 45000,
+    "originalPrice": 75000,
+    "discount": "-40",
+    "rating": 4,
+    "reviews": 125,
+    "description": "Demo",
+    "category": "Smartphones",
+    "inStock": true,
+    "features": [
+      "4K LED",
+      "Android One"
+    ],
+    "id": "1752229390237"
   }
 ]

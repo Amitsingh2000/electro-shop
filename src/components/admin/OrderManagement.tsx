@@ -23,21 +23,21 @@ export const OrderManagement: React.FC = () => {
   }, []);
 
   const fetchOrders = async () => {
-  setLoading(true);
-  try {
-    const token = localStorage.getItem('token');
-    const res = await axios.get('/api/orders', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    setOrders(res.data);
-  } catch (err) {
-    console.error('Failed to fetch orders:', err);
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/api/orders', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setOrders(res.data);
+    } catch (err) {
+      console.error('Failed to fetch orders:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const updateOrderLocally = (orderId: string, updates: Partial<Order>) => {
@@ -48,21 +48,39 @@ export const OrderManagement: React.FC = () => {
 
   const handleStatusUpdate = async (orderId: string, newStatus: OrderStatus) => {
     try {
-      await axios.put(`/api/orders/${orderId}`, { status: newStatus });
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `/api/orders/${orderId}`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       updateOrderLocally(orderId, { status: newStatus });
     } catch (err) {
       console.error('Error updating status:', err);
     }
   };
-
   const handlePaymentStatusUpdate = async (orderId: string, newStatus: PaymentStatus) => {
     try {
-      await axios.put(`/api/orders/${orderId}`, { paymentStatus: newStatus });
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `/api/orders/${orderId}`,
+        { paymentStatus: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       updateOrderLocally(orderId, { paymentStatus: newStatus });
     } catch (err) {
       console.error('Error updating payment status:', err);
     }
   };
+
 
   const openOrderDetails = (order: Order) => {
     setSelectedOrder(order);

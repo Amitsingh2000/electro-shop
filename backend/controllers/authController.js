@@ -55,6 +55,7 @@ exports.login = (req, res) => {
   res.json({ token, user: userWithoutPassword });
 };
 
+// controllers/authController.js
 exports.getMe = (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'Not authorized' });
@@ -62,12 +63,16 @@ exports.getMe = (req, res) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     const users = readUsers();
-    const user = users.find(u => u.id === decoded.userId);
+
+    // ❌ Fix this: 'decoded.userId' should be 'decoded.id'
+    const user = users.find(u => u.id === decoded.id);
+
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const { password: _, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = user;
     res.json(userWithoutPassword);
   } catch {
     res.status(401).json({ message: 'Invalid token' });
   }
 };
+

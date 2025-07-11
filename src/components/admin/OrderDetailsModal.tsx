@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {
-  XIcon, PackageIcon, TruckIcon, MapPinIcon,
-  CreditCardIcon, PhoneIcon, MailIcon, EditIcon, SaveIcon
+  XIcon, SaveIcon, Loader2Icon
 } from 'lucide-react';
 import { Order, OrderStatus, PaymentStatus } from '../../types/order';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 interface OrderDetailsModalProps {
   order: Order;
@@ -21,38 +21,51 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   onStatusUpdate,
   onPaymentStatusUpdate
 }) => {
-  const [isEditingTracking, setIsEditingTracking] = useState(false);
+  const [status, setStatus] = useState<OrderStatus>(order.status);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(order.paymentStatus);
   const [trackingNumber, setTrackingNumber] = useState(order.trackingNumber || '');
-  const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notes, setNotes] = useState(order.notes || '');
   const [loading, setLoading] = useState(false);
 
-  const updateOrder = async (updateFields: Partial<Order>) => {
-    try {
-      setLoading(true);
-      await axios.put(`/api/orders/${order.id}`, updateFields);
-    } catch (error) {
-      console.error('Failed to update order:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleUpdateOrder = async () => {
+  setLoading(true);
+  try {
+    const token = localStorage.getItem('token');
+    await axios.put(
+      `/api/orders/${order.id}`,
+      { status, paymentStatus, trackingNumber, notes },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-  const handleSaveTracking = async () => {
-    await updateOrder({ trackingNumber });
-    setIsEditingTracking(false);
-  };
+    // Update parent state
+    onStatusUpdate(order.id, status);
+    onPaymentStatusUpdate(order.id, paymentStatus);
 
-  const handleSaveNotes = async () => {
-    await updateOrder({ notes });
-    setIsEditingNotes(false);
-  };
+    // ✅ Show toast
+    toast.success('Order updated successfully');
 
-  // ...getStatusColor, getPaymentStatusColor unchanged
+    // ✅ Close modal
+    onClose();
+  } catch (error) {
+    console.error('Failed to update order:', error);
+    toast.error('Failed to update order');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+  const statusOptions: OrderStatus[] = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+  const paymentOptions: PaymentStatus[] = ['paid', 'pending', 'failed', 'refunded'];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Order Details</h2>
@@ -63,76 +76,83 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
           </button>
         </div>
 
+        {/* Content */}
         <div className="p-6 space-y-6">
-          {/* TRACKING */}
+          {/* Order Status */}
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-900 flex items-center">
-                  <TruckIcon className="w-5 h-5 mr-2" />
-                  Tracking Information
-                </h3>
-                <Button size="sm" variant="outline" onClick={() => setIsEditingTracking(!isEditingTracking)}>
-                  <EditIcon className="w-4 h-4" />
-                </Button>
-              </div>
-              {isEditingTracking ? (
-                <div className="space-y-2">
-                  <input
-                    type="text"
-                    value={trackingNumber}
-                    onChange={(e) => setTrackingNumber(e.target.value)}
-                    placeholder="Enter tracking number"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <div className="flex space-x-2">
-                    <Button size="sm" onClick={handleSaveTracking} disabled={loading}>
-                      <SaveIcon className="w-4 h-4 mr-1" />
-                      Save
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setIsEditingTracking(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-900">{trackingNumber || 'No tracking number assigned'}</p>
-              )}
+            <CardContent className="p-4 space-y-2">
+              <h3 className="font-semibold text-gray-900">Order Status</h3>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as OrderStatus)}
+                className="w-full border rounded px-3 py-2"
+              >
+                {statusOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
             </CardContent>
           </Card>
 
-          {/* NOTES */}
+          {/* Payment Status */}
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-900">Order Notes</h3>
-                <Button size="sm" variant="outline" onClick={() => setIsEditingNotes(!isEditingNotes)}>
-                  <EditIcon className="w-4 h-4" />
-                </Button>
-              </div>
-              {isEditingNotes ? (
-                <div className="space-y-2">
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  />
-                  <div className="flex space-x-2">
-                    <Button size="sm" onClick={handleSaveNotes} disabled={loading}>
-                      <SaveIcon className="w-4 h-4 mr-1" />
-                      Save
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => setIsEditingNotes(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-900">{notes || 'No notes added'}</p>
-              )}
+            <CardContent className="p-4 space-y-2">
+              <h3 className="font-semibold text-gray-900">Payment Status</h3>
+              <select
+                value={paymentStatus}
+                onChange={(e) => setPaymentStatus(e.target.value as PaymentStatus)}
+                className="w-full border rounded px-3 py-2"
+              >
+                {paymentOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
             </CardContent>
           </Card>
+
+          {/* Tracking Number */}
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="font-semibold text-gray-900 mb-2">Tracking Number</h3>
+              <input
+                type="text"
+                value={trackingNumber}
+                onChange={(e) => setTrackingNumber(e.target.value)}
+                placeholder="Enter tracking number"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Order Notes */}
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="font-semibold text-gray-900 mb-2">Order Notes</h3>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+              />
+            </CardContent>
+          </Card>
+
+          {/* Save Button */}
+          <div className="text-right">
+            <Button onClick={handleUpdateOrder} disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2Icon className="w-4 h-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <SaveIcon className="w-4 h-4 mr-2" />
+                  Update Order
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

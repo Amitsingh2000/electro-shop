@@ -11,12 +11,14 @@ import { CartPage } from './pages/CartPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { AdminPage } from './pages/AdminPage';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
   return (
+    
     <AuthProvider>
       <CartProvider>
-        <Router>
+         <Router>
           <div className="min-h-screen flex flex-col">
             <Header />
             <main className="flex-1">
@@ -34,6 +36,7 @@ function App() {
                 <Route path="/orders" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold">Orders Page</h1></div>} />
                 <Route path="/wishlist" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold">Wishlist Page</h1></div>} />
               </Routes>
+              <ToastContainer position="top-right" autoClose={3000} />
             </main>
             <Footer />
           </div>

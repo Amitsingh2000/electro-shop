@@ -1,10 +1,12 @@
 const { readData, writeData } = require('../utils/fileHelper');
 
+// GET all orders
 exports.getAllOrders = (req, res) => {
   const orders = readData('orders.json');
   res.json(orders);
 };
 
+// GET a single order by ID
 exports.getOrderById = (req, res) => {
   const orders = readData('orders.json');
   const order = orders.find(o => o.id === req.params.id);
@@ -12,24 +14,79 @@ exports.getOrderById = (req, res) => {
   res.json(order);
 };
 
+// POST create new order
 exports.createOrder = (req, res) => {
   const orders = readData('orders.json');
-  const newOrder = { ...req.body, id: Date.now().toString() };
+  const user = req.user; // Comes from protect middleware
+
+  if (!user) return res.status(401).json({ message: 'Unauthorized' });
+
+  const {
+    items,
+    shippingAddress = {},
+    paymentMethod = 'cod',
+    notes = '',
+  } = req.body;
+
+  const subtotal = items.reduce((sum, item) => sum + item.currentPrice * item.quantity, 0);
+  const deliveryFee = subtotal > 999 ? 0 : 99;
+  const total = subtotal + deliveryFee;
+
+  const newOrder = {
+    id: `ORD-${Date.now()}`,
+    customerId: user.id,
+    customerName: user.name,
+    customerEmail: user.email,
+    customerPhone: user.phone || '',
+    items: items.map(item => ({
+      id: item.id,
+      name: item.name,
+      image: item.image,
+      price: item.currentPrice,
+      quantity: item.quantity,
+      category: item.category,
+    })),
+    shippingAddress,
+    paymentMethod,
+    subtotal,
+    deliveryFee,
+    total,
+    paymentStatus: paymentMethod === 'cod' ? 'pending' : 'paid',
+    status: 'pending',
+    trackingNumber: `TRK${Date.now()}`,
+    notes,
+    orderDate: new Date().toISOString(),
+    estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
+  };
+
   orders.push(newOrder);
   writeData('orders.json', orders);
+
   res.status(201).json(newOrder);
 };
 
+// PUT update order
 exports.updateOrder = (req, res) => {
   let orders = readData('orders.json');
-  orders = orders.map(o => o.id === req.params.id ? { ...o, ...req.body } : o);
+  const index = orders.findIndex(o => o.id === req.params.id);
+
+  if (index === -1)
+    return res.status(404).json({ message: 'Order not found' });
+
+  orders[index] = { ...orders[index], ...req.body };
   writeData('orders.json', orders);
-  res.json({ message: 'Order updated' });
+
+  res.json({ message: 'Order updated', order: orders[index] });
 };
 
+// DELETE order
 exports.deleteOrder = (req, res) => {
   let orders = readData('orders.json');
-  orders = orders.filter(o => o.id !== req.params.id);
-  writeData('orders.json', orders);
+  const filtered = orders.filter(o => o.id !== req.params.id);
+
+  if (filtered.length === orders.length)
+    return res.status(404).json({ message: 'Order not found' });
+
+  writeData('orders.json', filtered);
   res.json({ message: 'Order deleted' });
 };

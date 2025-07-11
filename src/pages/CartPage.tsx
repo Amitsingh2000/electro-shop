@@ -1,34 +1,75 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MinusIcon, PlusIcon, TrashIcon, ArrowLeftIcon } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
+import axios from 'axios';
 
 export const CartPage: React.FC = () => {
   const { items, total, itemCount, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { user, token, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  const deliveryFee = total > 999 ? 0 : 99;
+  const finalTotal = total + deliveryFee;
+
+  const [shippingAddress, setShippingAddress] = React.useState({
+  address: '',
+  city: '',
+  postalCode: '',
+  country: '',
+});
+const [paymentMethod, setPaymentMethod] = React.useState<'cod' | 'online'>('cod');
+
+  const handlePlaceOrder = async () => {
+  if (!isAuthenticated || !token) {
+    navigate('/login');
+    return;
+  }
+
+  try {
+    await axios.post(
+      '/api/orders',
+      {
+        items,
+        total: finalTotal,
+        shippingAddress,
+        paymentMethod,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    clearCart();
+    navigate('/orders');
+  } catch (error) {
+    console.error('Failed to place order:', error);
+    alert('Failed to place order. Please try again later.');
+  }
+};
+
 
   if (items.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <div className="text-gray-400 text-6xl mb-4">🛒</div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-            <p className="text-gray-600 mb-8">Looks like you haven't added any items to your cart yet.</p>
-            <Link to="/products">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
-                Continue Shopping
-              </Button>
-            </Link>
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+          <div className="text-gray-400 text-6xl mb-4">🛒</div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
+          <p className="text-gray-600 mb-8">Looks like you haven't added any items to your cart yet.</p>
+          <Link to="/products">
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+              Continue Shopping
+            </Button>
+          </Link>
         </div>
       </div>
     );
   }
-
-  const deliveryFee = total > 999 ? 0 : 99;
-  const finalTotal = total + deliveryFee;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -43,15 +84,13 @@ export const CartPage: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
             <p className="text-gray-600">{itemCount} item{itemCount !== 1 ? 's' : ''} in your cart</p>
           </div>
-          {items.length > 0 && (
-            <Button
-              onClick={clearCart}
-              variant="outline"
-              className="text-red-600 border-red-600 hover:bg-red-50"
-            >
-              Clear Cart
-            </Button>
-          )}
+          <Button
+            onClick={clearCart}
+            variant="outline"
+            className="text-red-600 border-red-600 hover:bg-red-50"
+          >
+            Clear Cart
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -61,16 +100,9 @@ export const CartPage: React.FC = () => {
               <Card key={item.id}>
                 <CardContent className="p-6">
                   <div className="flex flex-col sm:flex-row gap-4">
-                    {/* Product Image */}
                     <div className="w-full sm:w-32 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                     </div>
-
-                    {/* Product Details */}
                     <div className="flex-1 space-y-2">
                       <div className="flex justify-between items-start">
                         <div>
@@ -91,7 +123,6 @@ export const CartPage: React.FC = () => {
                       </div>
 
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        {/* Price */}
                         <div className="flex items-center space-x-2">
                           <span className="text-xl font-bold text-gray-900">
                             ₹{item.currentPrice.toLocaleString()}
@@ -103,7 +134,6 @@ export const CartPage: React.FC = () => {
                           )}
                         </div>
 
-                        {/* Quantity Controls */}
                         <div className="flex items-center space-x-3">
                           <span className="text-sm text-gray-600">Qty:</span>
                           <div className="flex items-center border border-gray-300 rounded-lg">
@@ -125,7 +155,6 @@ export const CartPage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Subtotal */}
                         <div className="text-right">
                           <p className="text-lg font-bold text-gray-900">
                             ₹{(item.currentPrice * item.quantity).toLocaleString()}
@@ -141,33 +170,77 @@ export const CartPage: React.FC = () => {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
+            <Card className="lg:col-span-2">
+              <CardContent className="p-6 space-y-4">
+                <h2 className="text-lg font-semibold text-gray-800">Shipping Address</h2>
+                <input
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="Address"
+                  value={shippingAddress.address}
+                  onChange={e => setShippingAddress({ ...shippingAddress, address: e.target.value })}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <input
+                    className="w-full border rounded px-3 py-2"
+                    placeholder="City"
+                    value={shippingAddress.city}
+                    onChange={e => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                  />
+                  <input
+                    className="w-full border rounded px-3 py-2"
+                    placeholder="Postal Code"
+                    value={shippingAddress.postalCode}
+                    onChange={e => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
+                  />
+                </div>
+                <input
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="Country"
+                  value={shippingAddress.country}
+                  onChange={e => setShippingAddress({ ...shippingAddress, country: e.target.value })}
+                />
+
+                <h2 className="text-lg font-semibold text-gray-800 mt-6">Payment Method</h2>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      checked={paymentMethod === 'cod'}
+                      onChange={() => setPaymentMethod('cod')}
+                    />
+                    Cash on Delivery
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      checked={paymentMethod === 'online'}
+                      onChange={() => setPaymentMethod('online')}
+                    />
+                    Online (coming soon)
+                  </label>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="sticky top-8">
               <CardContent className="p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
-                
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal ({itemCount} items)</span>
                     <span className="font-medium">₹{total.toLocaleString()}</span>
                   </div>
-                  
                   <div className="flex justify-between">
                     <span className="text-gray-600">Delivery Fee</span>
                     <span className="font-medium">
-                      {deliveryFee === 0 ? (
-                        <span className="text-green-600">FREE</span>
-                      ) : (
-                        `₹${deliveryFee}`
-                      )}
+                      {deliveryFee === 0 ? <span className="text-green-600">FREE</span> : `₹${deliveryFee}`}
                     </span>
                   </div>
-                  
                   {total <= 999 && (
                     <p className="text-sm text-blue-600">
                       Add ₹{(1000 - total).toLocaleString()} more for free delivery!
                     </p>
                   )}
-                  
                   <div className="border-t pt-4">
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
@@ -177,15 +250,18 @@ export const CartPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-3">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3" size="lg">
-                    Proceed to Checkout
+                  <Button
+                    onClick={handlePlaceOrder}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                    size="lg"
+                  >
+                    Place Order
                   </Button>
                   <Button variant="outline" className="w-full py-3" size="lg">
                     Save for Later
                   </Button>
                 </div>
 
-                {/* Security Info */}
                 <div className="mt-6 pt-6 border-t">
                   <div className="flex items-center text-sm text-gray-600">
                     <div className="w-4 h-4 bg-green-500 rounded-full mr-2"></div>

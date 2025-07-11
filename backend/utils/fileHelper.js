@@ -1,17 +1,20 @@
+// utils/fileHelper.js
 const fs = require('fs');
 const path = require('path');
 
-const dataDir = path.join(__dirname, '../data');
-
-function readData(fileName) {
-  const filePath = path.join(dataDir, fileName);
-  if (!fs.existsSync(filePath)) return [];
-  const data = fs.readFileSync(filePath, 'utf-8');
-  return JSON.parse(data || '[]');
+function getFilePath(filename) {
+  return path.join(__dirname, '..', 'data', filename);
 }
 
-function writeData(fileName, data) {
-  const filePath = path.join(dataDir, fileName);
+function readData(filename) {
+  const filePath = getFilePath(filename);
+  if (!fs.existsSync(filePath)) return [];
+  const data = fs.readFileSync(filePath);
+  return JSON.parse(data);
+}
+
+function writeData(filename, data) {
+  const filePath = getFilePath(filename);
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 }
 

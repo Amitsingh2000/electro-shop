@@ -4,7 +4,7 @@ const orderController = require('../controllers/orderController');
 const { protect, isAdmin } = require('../middleware/adminAuth');
 
 // Public: create order
-router.post('/', orderController.createOrder);
+router.post('/', protect, orderController.createOrder);
 
 // Admin routes
 router.get('/', protect, isAdmin, orderController.getAllOrders);
