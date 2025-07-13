@@ -1,20 +1,4 @@
 {
-  "5fe5de07-b0a9-4f68-b0f2-9421545dacf7": [
-    {
-      "name": "Demo",
-      "image": "https://m.media-amazon.com/images/I/71d7rfSl0wL._UF1000,1000_QL80_.jpg",
-      "currentPrice": 145000,
-      "originalPrice": 150000,
-      "discount": "50000",
-      "rating": 4,
-      "reviews": 150,
-      "description": "Demo",
-      "category": "Phones",
-      "inStock": true,
-      "features": [
-        "Demo"
-      ],
-      "id": "1751530999817"
-    }
-  ]
+  "5fe5de07-b0a9-4f68-b0f2-9421545dacf7": [],
+  "78305cf0-febd-4f50-a204-9519576825fe": []
 }

@@ -26,5 +26,19 @@
       "postalCode": "123456",
       "country": "Indian"
     }
+  },
+  {
+    "id": "78305cf0-febd-4f50-a204-9519576825fe",
+    "name": "Amya Pardeshi",
+    "email": "amya@gmail.com",
+    "password": "$2b$10$vP3Pvpjx2VW99tRFQz2QNu4hqwTUHtLKCAxtjhr20kWT.kr0EhOHO",
+    "isAdmin": false,
+    "phone": "1234567890",
+    "shippingAddress": {
+      "address": "Gharkul",
+      "city": "Pune",
+      "postalCode": "411110",
+      "country": "India"
+    }
   }
 ]

@@ -1,9 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { HeartIcon, ShoppingCartIcon } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { HeartIcon, ShoppingCartIcon, TagIcon } from 'lucide-react';
 import { Product } from '../../types/product';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { useAuth } from '../../context/AuthContext';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 
@@ -15,6 +16,8 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, className = '' }) => {
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const isInWishlist = wishlist.some((item) => item.id === product.id);
 
@@ -27,49 +30,46 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className = '
   const toggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!isAuthenticated) return navigate('/login');
     isInWishlist ? removeFromWishlist(product.id) : addToWishlist(product);
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>
-        ★
-      </span>
+  const renderStars = (rating: number) =>
+    Array.from({ length: 5 }, (_, i) => (
+      <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>★</span>
     ));
-  };
 
   return (
-    <div className={`group relative bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-lg transition-all duration-300 ${className}`}>
+    <div
+      className={`group relative bg-white rounded-2xl shadow-md hover:shadow-xl border border-gray-200 transition-all duration-300 hover:-translate-y-1 ${className}`}
+    >
       <Link to={`/product/${product.id}`}>
-        {/* Image */}
-        <div className="relative aspect-square overflow-hidden rounded-t-lg bg-gray-100">
+        <div className="relative aspect-square bg-gray-100 overflow-hidden rounded-t-2xl">
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
 
-          {/* Discount Badge */}
           {product.discount && (
-            <Badge className="absolute top-3 left-3 bg-red-500 text-white">
+            <Badge className="absolute top-3 left-3 bg-red-600 text-white">
               {product.discount}
             </Badge>
           )}
 
-          {/* Wishlist Button */}
           <button
             onClick={toggleWishlist}
-            className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors opacity-0 group-hover:opacity-100"
+            aria-label="Toggle Wishlist"
+            className="absolute top-3 right-3 p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-opacity opacity-100"
           >
             <HeartIcon
               className={`w-5 h-5 transition-colors ${
-                isInWishlist ? 'text-red-500 fill-current' : 'text-gray-600'
+                isInWishlist ? 'text-red-500 fill-red-500' : 'text-gray-600'
               }`}
             />
           </button>
 
-          {/* Quick Add to Cart */}
-          <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="absolute bottom-3 inset-x-3 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button
               onClick={handleAddToCart}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
@@ -81,14 +81,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className = '
           </div>
         </div>
 
-        {/* Product Info */}
-        <div className="p-4">
-          <h3 className="font-medium text-gray-900 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
+        <div className="p-4 space-y-2">
+          <h3 className="text-base font-semibold text-gray-900 line-clamp-2 hover:text-blue-600 transition-colors">
             {product.name}
           </h3>
 
-          {/* Price */}
-          <div className="flex items-center space-x-2 mb-2">
+          <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-gray-900">
               ₹{product.currentPrice.toLocaleString()}
             </span>
@@ -99,20 +97,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, className = '
             )}
           </div>
 
-          {/* Rating */}
-          <div className="flex items-center space-x-1 mb-2">
-            <div className="flex text-sm">{renderStars(product.rating)}</div>
-            <span className="text-sm text-gray-500">({product.reviews})</span>
+          <div className="flex items-center text-sm text-gray-500">
+            {renderStars(product.rating)}
+            <span className="ml-2">({product.reviews})</span>
           </div>
 
-          {/* Stock + Category */}
-          <div className="flex items-center justify-between">
-            <span className={`text-xs px-2 py-1 rounded-full ${
-              product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}>
+          <div className="flex justify-between items-center text-xs text-gray-600 mt-1">
+            <span
+              className={`px-2 py-1 rounded-full font-medium ${
+                product.inStock
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-red-100 text-red-700'
+              }`}
+            >
               {product.inStock ? 'In Stock' : 'Out of Stock'}
             </span>
-            <span className="text-xs text-gray-500 capitalize">{product.category}</span>
+            <div className="flex items-center gap-1">
+              <TagIcon className="w-4 h-4 text-gray-400" />
+              <span className="capitalize">{product.category}</span>
+            </div>
           </div>
         </div>
       </Link>

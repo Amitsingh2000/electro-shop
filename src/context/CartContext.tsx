@@ -4,6 +4,7 @@ import React, {
   useReducer,
   ReactNode,
   useEffect,
+  useState,
 } from 'react';
 import { CartItem, Product } from '../types/product';
 
@@ -105,6 +106,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const [hasLoadedCart, setHasLoadedCart] = useState(false);
 
   // Load cart from localStorage
   useEffect(() => {
@@ -112,17 +114,29 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({
     if (stored) {
       try {
         const parsed: CartState = JSON.parse(stored);
-        dispatch({ type: 'LOAD_CART', payload: parsed });
+        if (
+          parsed &&
+          Array.isArray(parsed.items) &&
+          typeof parsed.total === 'number' &&
+          typeof parsed.itemCount === 'number'
+        ) {
+          dispatch({ type: 'LOAD_CART', payload: parsed });
+        } else {
+          console.warn('Invalid cart format in localStorage.');
+        }
       } catch (err) {
         console.error('Failed to parse cart from localStorage:', err);
       }
     }
+    setHasLoadedCart(true);
   }, []);
 
-  // Save cart to localStorage on change
+  // Save cart to localStorage after initial load
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(state));
-  }, [state]);
+    if (hasLoadedCart) {
+      localStorage.setItem('cart', JSON.stringify(state));
+    }
+  }, [state, hasLoadedCart]);
 
   const addToCart = (product: Product) => {
     dispatch({ type: 'ADD_TO_CART', payload: product });

@@ -1,11 +1,18 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MinusIcon, PlusIcon, TrashIcon, ArrowLeftIcon } from 'lucide-react';
+import {
+  MinusIcon,
+  PlusIcon,
+  TrashIcon,
+  ArrowLeftIcon,
+  ShieldCheckIcon,
+} from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 export const CartPage: React.FC = () => {
   const { items, total, itemCount, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -24,7 +31,6 @@ export const CartPage: React.FC = () => {
 
   const [paymentMethod, setPaymentMethod] = React.useState<'cod' | 'online'>('cod');
 
-  // ✅ Fetch user address from backend
   React.useEffect(() => {
     if (!token) return;
     const fetchUserAddress = async () => {
@@ -48,6 +54,12 @@ export const CartPage: React.FC = () => {
       return;
     }
 
+    const { address, city, postalCode, country } = shippingAddress;
+    if (!address || !city || !postalCode || !country) {
+      toast.error('Please fill in all shipping address fields.');
+      return;
+    }
+
     try {
       await axios.post(
         '/api/orders',
@@ -58,33 +70,39 @@ export const CartPage: React.FC = () => {
           paymentMethod,
         },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
       clearCart();
+      toast.success('Order placed successfully!');
       navigate('/orders');
     } catch (error) {
       console.error('Failed to place order:', error);
-      alert('Failed to place order. Please try again later.');
+      toast.error('Failed to place order. Please try again.');
     }
+  };
+
+  const handleRemoveItem = (id: number) => {
+    removeFromCart(id);
+    toast.info('Item removed from cart.');
+  };
+
+  const handleUpdateQuantity = (id: number, quantity: number) => {
+    updateQuantity(id, quantity);
+    toast.success('Quantity updated.');
   };
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <div className="text-gray-400 text-6xl mb-4">🛒</div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-          <p className="text-gray-600 mb-8">Looks like you haven't added any items to your cart yet.</p>
-          <Link to="/products">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
-              Continue Shopping
-            </Button>
-          </Link>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center flex-col text-center px-4 py-16">
+        <div className="text-gray-400 text-6xl mb-4">🛒</div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
+        <p className="text-gray-600 mb-6">Looks like you haven't added any items to your cart yet.</p>
+        <Link to="/products">
+          <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
+            Continue Shopping
+          </Button>
+        </Link>
       </div>
     );
   }
@@ -92,7 +110,6 @@ export const CartPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <Link to="/products" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
@@ -103,7 +120,10 @@ export const CartPage: React.FC = () => {
             <p className="text-gray-600">{itemCount} item{itemCount !== 1 ? 's' : ''} in your cart</p>
           </div>
           <Button
-            onClick={clearCart}
+            onClick={() => {
+              clearCart();
+              toast.info('Cart cleared.');
+            }}
             variant="outline"
             className="text-red-600 border-red-600 hover:bg-red-50"
           >
@@ -133,7 +153,7 @@ export const CartPage: React.FC = () => {
                           <p className="text-sm text-gray-500 capitalize">{item.category}</p>
                         </div>
                         <button
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => handleRemoveItem(item.id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         >
                           <TrashIcon className="w-5 h-5" />
@@ -156,7 +176,7 @@ export const CartPage: React.FC = () => {
                           <span className="text-sm text-gray-600">Qty:</span>
                           <div className="flex items-center border border-gray-300 rounded-lg">
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                               className="p-2 hover:bg-gray-100 transition-colors"
                             >
                               <MinusIcon className="w-4 h-4" />
@@ -165,7 +185,7 @@ export const CartPage: React.FC = () => {
                               {item.quantity}
                             </span>
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                               className="p-2 hover:bg-gray-100 transition-colors"
                             >
                               <PlusIcon className="w-4 h-4" />
@@ -186,8 +206,8 @@ export const CartPage: React.FC = () => {
             ))}
           </div>
 
-          {/* Order Summary */}
-          <div className="lg:col-span-1">
+          {/* Summary */}
+          <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardContent className="p-6 space-y-4">
                 <h2 className="text-lg font-semibold text-gray-800">Shipping Address</h2>
@@ -233,6 +253,7 @@ export const CartPage: React.FC = () => {
                       type="radio"
                       checked={paymentMethod === 'online'}
                       onChange={() => setPaymentMethod('online')}
+                      disabled
                     />
                     Online (coming soon)
                   </label>
@@ -280,11 +301,9 @@ export const CartPage: React.FC = () => {
                   </Button>
                 </div>
 
-                <div className="mt-6 pt-6 border-t">
-                  <div className="flex items-center text-sm text-gray-600">
-                    <div className="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
-                    <span>Secure checkout with SSL encryption</span>
-                  </div>
+                <div className="mt-6 pt-6 border-t text-sm text-gray-600 flex items-center gap-2">
+                  <ShieldCheckIcon className="w-5 h-5 text-green-500" />
+                  <span>Secure checkout with SSL encryption</span>
                 </div>
               </CardContent>
             </Card>

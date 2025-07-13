@@ -19,36 +19,37 @@ import { WishlistProvider } from './context/WishlistContext';
 
 function App() {
   return (
-    
+
     <AuthProvider>
-      <WishlistProvider>
       <CartProvider>
-         <Router>
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-1">
-              <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/products" element={<ProductsPage />} />
-                <Route path="/product/:id" element={<ProductDetailPage />} />
-                <Route path="/cart" element={<CartPage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/signup" element={<SignupPage />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/about" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold">About Page</h1></div>} />
-                <Route path="/contact" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold">Contact Page</h1></div>} />
-               <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/orders" element={<OrdersPage />} />
-                <Route path="/wishlist" element={<WishlistPage />} />
-                
-               </Routes>
-              <ToastContainer position="top-right" autoClose={3000} />
-            </main>
-            <Footer />
-          </div>
-        </Router>
+        <WishlistProvider>
+          <Router>
+            <div className="min-h-screen flex flex-col">
+              <Header />
+              <main className="flex-1">
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/product/:id" element={<ProductDetailPage />} />
+                  <Route path="/cart" element={<CartPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/signup" element={<SignupPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/about" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold">About Page</h1></div>} />
+                  <Route path="/contact" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold">Contact Page</h1></div>} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/orders" element={<OrdersPage />} />
+                  <Route path="/wishlist" element={<WishlistPage />} />
+
+                </Routes>
+                <ToastContainer position="top-right" autoClose={3000} />
+              </main>
+              <Footer />
+            </div>
+          </Router>
+        </WishlistProvider>
       </CartProvider>
-      </WishlistProvider>
+
     </AuthProvider>
   );
 }

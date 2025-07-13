@@ -10,7 +10,7 @@ import {
   Watch,
   Camera,
   Laptop,
-  Tablet
+  Tablet,
 } from 'lucide-react';
 import axios from 'axios';
 import { Product } from '../types/product';
@@ -38,8 +38,6 @@ export const HomePage: React.FC = () => {
       try {
         const res = await axios.get<Product[]>('/api/products');
         setProducts(res.data);
-
-        // Shuffle and select 4 random products for featured section
         const shuffled = [...res.data].sort(() => 0.5 - Math.random());
         setFeaturedProducts(shuffled.slice(0, 4));
       } catch (err) {
@@ -48,7 +46,6 @@ export const HomePage: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
@@ -57,139 +54,85 @@ export const HomePage: React.FC = () => {
       <ShieldCheckIcon className="w-8 h-8 text-blue-600" />
     );
 
-  const uniqueCategories = Array.from(
-    new Set(products.map((product) => product.category.toLowerCase()))
-  );
-
+  const uniqueCategories = Array.from(new Set(products.map(p => p.category.toLowerCase())));
   const flashSaleProducts = products.slice(0, 4);
 
   const serviceFeatures = [
     {
       icon: TruckIcon,
       title: 'FREE AND FAST DELIVERY',
-      description: 'Free delivery for all orders over ₹999',
+      description: 'Free delivery on orders above ₹999',
     },
     {
       icon: HeadphonesIcon,
-      title: '24/7 CUSTOMER SERVICE',
-      description: 'Friendly 24/7 customer support',
+      title: '24/7 CUSTOMER SUPPORT',
+      description: 'Instant assistance anytime you need it',
     },
     {
       icon: ShieldCheckIcon,
-      title: 'MONEY BACK GUARANTEE',
-      description: '30-day return policy for your peace of mind',
+      title: 'SECURE PAYMENTS',
+      description: '100% secure payments with data protection',
     },
   ];
 
   return (
     <div className="min-h-screen">
+
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-700 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <div className="text-blue-200 text-lg font-medium">iPhone 14 Series</div>
-              <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-                Up to 10%<br />off Voucher
-              </h1>
-              <p className="text-xl text-blue-100">
-                Discover the latest technology with unbeatable prices and premium quality.
-              </p>
-              <Link to="/products">
-                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-                  Shop Now
-                  <ArrowRightIcon className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-            </div>
-            <div className="relative">
-              <img
-                src="https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=800"
-                alt="iPhone 14"
-                className="w-full max-w-md mx-auto rounded-2xl shadow-2xl"
-              />
-            </div>
+      <section className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-20">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div>
+            <p className="text-blue-200 uppercase tracking-wide text-sm font-semibold mb-3">iPhone 14 Series</p>
+            <h1 className="text-5xl font-bold mb-4 leading-tight">Get up to <span className="text-yellow-400">10% off</span> Today</h1>
+            <p className="text-blue-100 text-lg mb-6">Top-quality gadgets and unbeatable prices. Don’t miss out!</p>
+            <Link to="/products">
+              <Button size="lg" className="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-semibold">
+                Shop Now <ArrowRightIcon className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+          </div>
+          <div className="relative">
+            <img
+              src="https://images.pexels.com/photos/788946/pexels-photo-788946.jpeg?auto=compress&cs=tinysrgb&w=800"
+              alt="iPhone 14"
+              className="rounded-2xl shadow-xl w-full max-w-md mx-auto"
+            />
           </div>
         </div>
       </section>
 
-      {/* Flash Sales Section */}
+      {/* Flash Sales */}
       <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center mb-8">
-            <div className="w-4 h-10 bg-blue-600 rounded-lg mr-4"></div>
-            <h2 className="text-blue-600 text-2xl font-semibold">Today's</h2>
-          </div>
-
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 md:mb-0">
-              Flash Sales
-            </h1>
-
-            {/* Countdown */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="text-sm text-gray-600 mb-2">Ends in:</div>
-              <div className="flex space-x-4 text-2xl font-bold">
-                <div className="text-center">
-                  <div className="text-gray-900">15</div>
-                  <div className="text-xs text-gray-500">Days</div>
-                </div>
-                <div className="text-blue-600">:</div>
-                <div className="text-center">
-                  <div className="text-gray-900">18</div>
-                  <div className="text-xs text-gray-500">Hours</div>
-                </div>
-                <div className="text-blue-600">:</div>
-                <div className="text-center">
-                  <div className="text-gray-900">49</div>
-                  <div className="text-xs text-gray-500">Min</div>
-                </div>
-                <div className="text-blue-600">:</div>
-                <div className="text-center">
-                  <div className="text-gray-900">47</div>
-                  <div className="text-xs text-gray-500">Sec</div>
-                </div>
-              </div>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between items-center mb-10">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Flash Sales</h2>
+              <p className="text-gray-500">Limited-time offers just for you</p>
+            </div>
+            <div className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg font-semibold shadow-sm">
+              Ends in: 15d : 18h : 49m : 47s
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {flashSaleProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-
-          <div className="text-center">
-            <Link to="/products">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-12">
-                View All Products
-              </Button>
-            </Link>
-          </div>
         </div>
       </section>
 
-      {/* Categories Section */}
+      {/* Categories */}
       <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center mb-8">
-            <div className="w-4 h-10 bg-blue-600 rounded-lg mr-4"></div>
-            <h2 className="text-blue-600 text-2xl font-semibold">Categories</h2>
-          </div>
-
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-12">
-            Browse By Category
-          </h1>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">Browse by Category</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
             {uniqueCategories.map((category) => (
               <Link key={category} to={`/products?category=${category}`}>
-                <Card className="h-32 hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer border-2 hover:border-blue-500">
-                  <CardContent className="flex flex-col items-center justify-center h-full p-4">
-                    <div className="text-3xl mb-2">{getIconForCategory(category)}</div>
-                    <h3 className="font-medium text-gray-900 text-center capitalize">
-                      {category}
-                    </h3>
+                <Card className="transition-all transform hover:scale-105 hover:border-blue-500 border-2 text-center cursor-pointer">
+                  <CardContent className="flex flex-col items-center justify-center py-6">
+                    {getIconForCategory(category)}
+                    <p className="mt-2 capitalize font-medium text-gray-700">{category}</p>
                   </CardContent>
                 </Card>
               </Link>
@@ -200,15 +143,11 @@ export const HomePage: React.FC = () => {
 
       {/* Featured Products */}
       <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Featured Products
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Discover our handpicked selection of premium electronics and gadgets
-            </p>
-          </div>
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">Featured Products</h2>
+          <p className="text-gray-500 text-center mb-12 max-w-xl mx-auto">
+            A curated selection of our most loved tech products picked just for you.
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredProducts.map((product) => (
@@ -219,16 +158,16 @@ export const HomePage: React.FC = () => {
       </section>
 
       {/* Service Features */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <section className="py-16 bg-gray-100">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             {serviceFeatures.map((feature, index) => (
               <div key={index} className="text-center">
-                <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <feature.icon className="w-10 h-10 text-white" />
+                <div className="w-16 h-16 mx-auto mb-4 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                  <feature.icon className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                <p className="text-gray-600">{feature.description}</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">{feature.title}</h3>
+                <p className="text-gray-600 text-sm">{feature.description}</p>
               </div>
             ))}
           </div>

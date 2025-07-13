@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeftIcon,
   HeartIcon,
@@ -11,13 +11,19 @@ import {
 import axios from 'axios';
 import { Product } from '../types/product';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { ProductCard } from '../components/product/ProductCard';
+import { toast } from 'react-toastify';
 
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart } = useCart();
+  const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -46,23 +52,39 @@ export const ProductDetailPage: React.FC = () => {
     fetchProductAndRelated();
   }, [id]);
 
+  const isInWishlist = useMemo(() => {
+    if (!product) return false;
+    return wishlist.some(item => Number(item.id) === Number(product.id));
+  }, [wishlist, product]);
+
+  const handleWishlistToggle = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    if (!product) return;
+    if (isInWishlist) {
+    removeFromWishlist(product.id);
+    toast.success('Removed from Wishlist');
+  } else {
+    addToWishlist(product);
+    toast.success('Added to Wishlist');
+  }
+  };
+
   const handleAddToCart = () => {
     if (product) {
-      for (let i = 0; i < quantity; i++) {
-        addToCart(product);
-      }
+      for (let i = 0; i < quantity; i++) addToCart(product);
+      toast.success(`${product.name} added to cart`);
     }
   };
 
-  const renderStars = (rating: number) => (
-    <>
-      {Array.from({ length: 5 }, (_, i) => (
-        <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>
-          ★
-        </span>
-      ))}
-    </>
-  );
+  const renderStars = (rating: number) =>
+    Array.from({ length: 5 }, (_, i) => (
+      <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>
+        ★
+      </span>
+    ));
 
   if (loading) {
     return (
@@ -111,19 +133,14 @@ export const ProductDetailPage: React.FC = () => {
           {/* Product Images */}
           <div className="space-y-4">
             <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-              <img
-                src={productImages[selectedImage]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              <img src={productImages[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
             </div>
             <div className="grid grid-cols-3 gap-4">
               {productImages.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setSelectedImage(i)}
-                  className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 ${selectedImage === i ? 'border-blue-500' : 'border-transparent'
-                    }`}
+                  className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-all duration-200 ${selectedImage === i ? 'border-blue-500' : 'border-transparent'}`}
                 >
                   <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
                 </button>
@@ -133,27 +150,37 @@ export const ProductDetailPage: React.FC = () => {
 
           {/* Product Info */}
           <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="secondary" className="mb-2">{product.category}</Badge>
-                <div className="flex items-center space-x-2">
-                  <button className="p-2 hover:bg-gray-100 rounded-lg">
-                    <HeartIcon className="w-5 h-5 text-gray-600" />
-                  </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg">
-                    <ShareIcon className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="flex text-lg">{renderStars(product.rating)}</div>
-                <span className="text-gray-600">({product.reviews} reviews)</span>
+            <div className="flex items-center justify-between">
+              <Badge variant="secondary">{product.category}</Badge>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleWishlistToggle}
+                  className="relative p-2 rounded-lg hover:bg-gray-100 transition group"
+                  title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                  <HeartIcon
+                    className={`w-5 h-5 transition-colors duration-300 ${
+                      isInWishlist ? 'text-red-500 fill-red-500' : 'text-gray-600'
+                    }`}
+                  />
+                  {isInWishlist && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                  )}
+                </button>
+                <button className="p-2 hover:bg-gray-100 rounded-lg" title="Share">
+                  <ShareIcon className="w-5 h-5 text-gray-600" />
+                </button>
               </div>
             </div>
 
+            <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
+            <div className="flex items-center space-x-2">
+              <div className="flex text-lg">{renderStars(product.rating)}</div>
+              <span className="text-gray-600">({product.reviews} reviews)</span>
+            </div>
+
             {/* Pricing */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div className="flex items-center space-x-4">
                 <span className="text-3xl font-bold text-gray-900">
                   ₹{product.currentPrice.toLocaleString()}
@@ -200,12 +227,11 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             )}
 
-
-            {/* Quantity + Actions */}
+            {/* Quantity and Actions */}
             <div className="space-y-4">
               <div className="flex items-center space-x-4">
                 <label className="text-sm font-medium text-gray-700">Quantity:</label>
-                <div className="flex items-center border border-gray-300 rounded-lg">
+                <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                   <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="px-3 py-2 hover:bg-gray-100">-</button>
                   <span className="px-4 py-2 border-x border-gray-300">{quantity}</span>
                   <button onClick={() => setQuantity(quantity + 1)} className="px-3 py-2 hover:bg-gray-100">+</button>
@@ -227,7 +253,7 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Service Info */}
+            {/* Service Icons */}
             <div className="border-t pt-6 space-y-4">
               <div className="flex items-center space-x-3 text-sm text-gray-600">
                 <TruckIcon className="w-5 h-5" />

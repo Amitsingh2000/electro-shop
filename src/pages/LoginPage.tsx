@@ -10,7 +10,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
-
+import { ToastContainer, toast } from 'react-toastify';
 export const LoginPage: React.FC = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -24,12 +24,9 @@ export const LoginPage: React.FC = () => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
     if (!formData.email.trim()) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Invalid email address';
-
     if (!formData.password.trim()) newErrors.password = 'Password is required';
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -37,14 +34,19 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
-
     if (!validateForm()) return;
 
     try {
       const success = await login(formData.email, formData.password);
-      if (success) navigate(from, { replace: true });
-      else setLoginError('Invalid email or password. Please try again.');
+      if (success) {
+        toast.success('Logged in successfully!');
+        alert("login sucess")
+        navigate(from, { replace: true });
+      } else {
+        toast.error('Invalid email or password.');
+      }
     } catch {
+      toast.error('Something went wrong. Please try again.');
       setLoginError('Something went wrong. Please try again later.');
     }
   };
@@ -52,13 +54,13 @@ export const LoginPage: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     if (loginError) setLoginError('');
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <ToastContainer position="top-right" autoClose={3000} />
       <div className="w-full max-w-md">
         <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6 transition-colors">
           <ArrowLeftIcon className="w-4 h-4 mr-2" />
@@ -74,8 +76,8 @@ export const LoginPage: React.FC = () => {
                 </div>
                 <span className="text-2xl font-bold text-gray-900">ElectroShop</span>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-              <p className="text-gray-600">Sign in to your account to continue shopping</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back 👋</h1>
+              <p className="text-gray-600">Sign in to continue shopping smart</p>
             </div>
 
             {loginError && (
@@ -94,12 +96,17 @@ export const LoginPage: React.FC = () => {
                 error={errors.email}
                 onChange={handleInputChange}
               />
-
               <InputField
                 id="password"
                 type={showPassword ? 'text' : 'password'}
                 icon={<LockIcon className="h-5 w-5 text-gray-400" />}
-                toggleIcon={showPassword ? <EyeOffIcon className="h-5 w-5 text-gray-400" /> : <EyeIcon className="h-5 w-5 text-gray-400" />}
+                toggleIcon={
+                  showPassword ? (
+                    <EyeOffIcon className="h-5 w-5 text-gray-400" />
+                  ) : (
+                    <EyeIcon className="h-5 w-5 text-gray-400" />
+                  )
+                }
                 onToggle={() => setShowPassword(!showPassword)}
                 placeholder="Password"
                 value={formData.password}
@@ -110,7 +117,7 @@ export const LoginPage: React.FC = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-medium transition-colors"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-medium transition"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -129,40 +136,24 @@ export const LoginPage: React.FC = () => {
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  <span className="px-2 bg-white text-gray-500">or continue with</span>
                 </div>
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              <Button variant="outline" className="w-full py-3">Google</Button>
-              <Button variant="outline" className="w-full py-3">Facebook</Button>
-            </div>
-
-            <div className="text-center">
-              <p className="text-gray-600">
-                Don&apos;t have an account?{' '}
-                <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">
-                  Sign up for free
-                </Link>
-              </p>
+            <div className="text-center text-sm text-gray-600">
+              Don&apos;t have an account?{' '}
+              <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium transition">
+                Sign up for free
+              </Link>
             </div>
           </CardContent>
         </Card>
-
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h3 className="text-sm font-medium text-blue-900 mb-2">Demo Credentials:</h3>
-          <p className="text-sm text-blue-700">
-            Email: demo@electroshop.com<br />
-            Password: demo123
-          </p>
-        </div>
       </div>
     </div>
   );
 };
 
-// ♻️ Reusable InputField component (same as SignupPage)
+// ♻️ Reusable input field component
 const InputField = ({
   id,
   type,
@@ -185,7 +176,7 @@ const InputField = ({
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }) => (
   <div>
-    <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-2">
+    <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
       {placeholder}
     </label>
     <div className="relative">
@@ -198,8 +189,8 @@ const InputField = ({
         type={type}
         value={value}
         onChange={onChange}
-        className={`block w-full pl-10 ${toggleIcon ? 'pr-10' : 'pr-3'} py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
-          error ? 'border-red-300 bg-red-50' : 'border-gray-300'
+        className={`block w-full pl-10 ${toggleIcon ? 'pr-10' : 'pr-3'} py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
+          error ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
         }`}
         placeholder={placeholder}
       />
@@ -207,7 +198,7 @@ const InputField = ({
         <button
           type="button"
           onClick={onToggle}
-          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
         >
           {toggleIcon}
         </button>
