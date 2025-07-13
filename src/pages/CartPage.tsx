@@ -16,43 +16,61 @@ export const CartPage: React.FC = () => {
   const finalTotal = total + deliveryFee;
 
   const [shippingAddress, setShippingAddress] = React.useState({
-  address: '',
-  city: '',
-  postalCode: '',
-  country: '',
-});
-const [paymentMethod, setPaymentMethod] = React.useState<'cod' | 'online'>('cod');
+    address: '',
+    city: '',
+    postalCode: '',
+    country: '',
+  });
+
+  const [paymentMethod, setPaymentMethod] = React.useState<'cod' | 'online'>('cod');
+
+  // ✅ Fetch user address from backend
+  React.useEffect(() => {
+    if (!token) return;
+    const fetchUserAddress = async () => {
+      try {
+        const res = await axios.get('/api/users/me', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.data.shippingAddress) {
+          setShippingAddress(res.data.shippingAddress);
+        }
+      } catch (err) {
+        console.error('Failed to load user address:', err);
+      }
+    };
+    fetchUserAddress();
+  }, [token]);
 
   const handlePlaceOrder = async () => {
-  if (!isAuthenticated || !token) {
-    navigate('/login');
-    return;
-  }
+    if (!isAuthenticated || !token) {
+      navigate('/login');
+      return;
+    }
 
-  try {
-    await axios.post(
-      '/api/orders',
-      {
-        items,
-        total: finalTotal,
-        shippingAddress,
-        paymentMethod,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    try {
+      await axios.post(
+        '/api/orders',
+        {
+          items,
+          total: finalTotal,
+          shippingAddress,
+          paymentMethod,
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    clearCart();
-    navigate('/orders');
-  } catch (error) {
-    console.error('Failed to place order:', error);
-    alert('Failed to place order. Please try again later.');
-  }
-};
-
+      clearCart();
+      navigate('/orders');
+    } catch (error) {
+      console.error('Failed to place order:', error);
+      alert('Failed to place order. Please try again later.');
+    }
+  };
 
   if (items.length === 0) {
     return (
@@ -170,7 +188,7 @@ const [paymentMethod, setPaymentMethod] = React.useState<'cod' | 'online'>('cod'
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <Card className="lg:col-span-2">
+            <Card>
               <CardContent className="p-6 space-y-4">
                 <h2 className="text-lg font-semibold text-gray-800">Shipping Address</h2>
                 <input

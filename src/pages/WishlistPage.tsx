@@ -1,21 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeftIcon, HeartIcon, ShoppingCartIcon, TrashIcon, ShareIcon } from 'lucide-react';
-import { products } from '../data/products';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { products } from '../data/products'; // used only for fallback suggestions
 
 export const WishlistPage: React.FC = () => {
   const { addToCart } = useCart();
-  
-  // Mock wishlist items (in real app, this would come from user's wishlist)
-  const [wishlistItems, setWishlistItems] = useState(products.slice(0, 6));
-
-  const removeFromWishlist = (productId: number) => {
-    setWishlistItems(wishlistItems.filter(item => item.id !== productId));
-  };
+  const { wishlist, removeFromWishlist } = useWishlist();
 
   const addToCartAndRemove = (product: any) => {
     addToCart(product);
@@ -24,15 +19,13 @@ export const WishlistPage: React.FC = () => {
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>
-        ★
-      </span>
+      <span key={i} className={i < rating ? 'text-yellow-400' : 'text-gray-300'}>★</span>
     ));
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <Link to="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
@@ -46,10 +39,10 @@ export const WishlistPage: React.FC = () => {
                 My Wishlist
               </h1>
               <p className="text-gray-600">
-                {wishlistItems.length} item{wishlistItems.length !== 1 ? 's' : ''} saved for later
+                {wishlist.length} item{wishlist.length !== 1 ? 's' : ''} saved for later
               </p>
             </div>
-            {wishlistItems.length > 0 && (
+            {wishlist.length > 0 && (
               <div className="flex space-x-3">
                 <Button variant="outline">
                   <ShareIcon className="w-4 h-4 mr-2" />
@@ -57,10 +50,10 @@ export const WishlistPage: React.FC = () => {
                 </Button>
                 <Button 
                   onClick={() => {
-                    wishlistItems.forEach(item => addToCart(item));
-                    setWishlistItems([]);
+                    wishlist.forEach(item => addToCart(item));
+                    wishlist.forEach(item => removeFromWishlist(item.id));
                   }}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   <ShoppingCartIcon className="w-4 h-4 mr-2" />
                   Add All to Cart
@@ -70,8 +63,7 @@ export const WishlistPage: React.FC = () => {
           </div>
         </div>
 
-        {wishlistItems.length === 0 ? (
-          /* Empty Wishlist */
+        {wishlist.length === 0 ? (
           <div className="text-center py-16">
             <div className="text-gray-400 text-6xl mb-6">💝</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Your wishlist is empty</h2>
@@ -85,26 +77,22 @@ export const WishlistPage: React.FC = () => {
             </Link>
           </div>
         ) : (
-          /* Wishlist Items */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {wishlistItems.map((item) => (
+            {wishlist.map((item) => (
               <Card key={item.id} className="group relative overflow-hidden hover:shadow-lg transition-all duration-300">
-                {/* Product Image */}
                 <div className="relative aspect-square overflow-hidden bg-gray-100">
                   <img
                     src={item.image}
                     alt={item.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  
-                  {/* Discount Badge */}
+
                   {item.discount && (
                     <Badge className="absolute top-3 left-3 bg-red-500 text-white">
                       {item.discount}
                     </Badge>
                   )}
-                  
-                  {/* Remove from Wishlist */}
+
                   <button
                     onClick={() => removeFromWishlist(item.id)}
                     className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors group"
@@ -112,7 +100,6 @@ export const WishlistPage: React.FC = () => {
                     <HeartIcon className="w-5 h-5 text-red-500 fill-current" />
                   </button>
 
-                  {/* Quick Actions Overlay */}
                   <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <div className="space-y-2">
                       <Button
@@ -132,22 +119,15 @@ export const WishlistPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Product Info */}
                 <CardContent className="p-4">
                   <div className="space-y-2">
                     <h3 className="font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
                       {item.name}
                     </h3>
-                    
-                    {/* Rating */}
                     <div className="flex items-center space-x-1">
-                      <div className="flex text-sm">
-                        {renderStars(item.rating)}
-                      </div>
+                      <div className="flex text-sm">{renderStars(item.rating)}</div>
                       <span className="text-sm text-gray-500">({item.reviews})</span>
                     </div>
-                    
-                    {/* Price */}
                     <div className="flex items-center space-x-2">
                       <span className="text-lg font-bold text-gray-900">
                         ₹{item.currentPrice.toLocaleString()}
@@ -158,20 +138,14 @@ export const WishlistPage: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    
-                    {/* Stock Status */}
                     <div className="flex items-center justify-between">
                       <span className={`text-xs px-2 py-1 rounded-full ${
-                        item.inStock 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
+                        item.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
                         {item.inStock ? 'In Stock' : 'Out of Stock'}
                       </span>
                       <span className="text-xs text-gray-500 capitalize">{item.category}</span>
                     </div>
-
-                    {/* Action Buttons */}
                     <div className="flex space-x-2 pt-2">
                       <Button
                         onClick={() => addToCartAndRemove(item)}
@@ -199,7 +173,7 @@ export const WishlistPage: React.FC = () => {
         )}
 
         {/* Wishlist Tips */}
-        {wishlistItems.length > 0 && (
+        {wishlist.length > 0 && (
           <Card className="mt-12">
             <CardContent className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">💡 Wishlist Tips</h3>
@@ -230,8 +204,8 @@ export const WishlistPage: React.FC = () => {
           </Card>
         )}
 
-        {/* Recently Viewed */}
-        {wishlistItems.length > 0 && (
+        {/* Suggestions */}
+        {wishlist.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">You might also like</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -243,9 +217,6 @@ export const WishlistPage: React.FC = () => {
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <button className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors">
-                      <HeartIcon className="w-4 h-4 text-gray-600" />
-                    </button>
                   </div>
                   <CardContent className="p-4">
                     <h3 className="font-medium text-gray-900 line-clamp-2 mb-2">{product.name}</h3>

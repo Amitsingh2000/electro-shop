@@ -102,10 +102,54 @@ const deleteUser = (req, res) => {
 
   res.json({ message: 'User deleted successfully' });
 };
+// @desc    Get current logged-in user profile
+// @route   GET /api/users/me
+// @access  Private (authenticated user)
+const getMe = (req, res) => {
+  const users = readUsers();
+  const currentUser = users.find(u => u.id === req.user.id);
+  if (!currentUser) return res.status(404).json({ message: 'User not found' });
+
+  const { password, ...userData } = currentUser;
+  res.json(userData);
+};
+
+// @desc    Update current user's profile
+// @route   PATCH /api/users/me
+// @access  Private (authenticated user)
+const updateMe = (req, res) => {
+  const users = readUsers();
+  const userIndex = users.findIndex((u) => u.id === req.user.id);
+  if (userIndex === -1) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  const user = users[userIndex];
+  const { name, phone, shippingAddress } = req.body;
+
+  user.name = name ?? user.name;
+  user.phone = phone ?? user.phone;
+  user.shippingAddress = {
+    address: shippingAddress?.address ?? user.shippingAddress?.address ?? '',
+    city: shippingAddress?.city ?? user.shippingAddress?.city ?? '',
+    postalCode: shippingAddress?.postalCode ?? user.shippingAddress?.postalCode ?? '',
+    country: shippingAddress?.country ?? user.shippingAddress?.country ?? ''
+  };
+
+  users[userIndex] = user;
+  writeUsers(users);
+
+  const { password, ...safeUser } = user;
+  res.json(safeUser);
+};
+
+
 
 module.exports = {
   getAllUsers,
-  createUser,   // 👈 Add this to exports
+  createUser,   
   updateUser,
   deleteUser,
+  getMe,       
+  updateMe 
 };

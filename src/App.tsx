@@ -15,11 +15,13 @@ import { ToastContainer } from 'react-toastify';
 import { ProfilePage } from './pages/ProfilePage';
 import { OrdersPage } from './pages/OrdersPage';
 import { WishlistPage } from './pages/WishlistPage';
+import { WishlistProvider } from './context/WishlistContext';
 
 function App() {
   return (
     
     <AuthProvider>
+      <WishlistProvider>
       <CartProvider>
          <Router>
           <div className="min-h-screen flex flex-col">
@@ -46,6 +48,7 @@ function App() {
           </div>
         </Router>
       </CartProvider>
+      </WishlistProvider>
     </AuthProvider>
   );
 }

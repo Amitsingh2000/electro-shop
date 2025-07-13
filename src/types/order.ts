@@ -28,12 +28,10 @@ export interface OrderItem {
 }
 
 export interface ShippingAddress {
-  fullName: string;
-  addressLine1: string;
-  addressLine2?: string;
+  address: string;
   city: string;
-  state: string;
-  pincode: string;
+  country:string;
+  postalCode: string;
   phone: string;
 }
 

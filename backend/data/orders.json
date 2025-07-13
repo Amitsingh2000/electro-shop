@@ -64,5 +64,71 @@
     "notes": "",
     "orderDate": "2025-07-11T13:39:36.071Z",
     "estimatedDelivery": "2025-07-16T13:39:36.071Z"
+  },
+  {
+    "id": "ORD-1752385803396",
+    "customerId": "5fe5de07-b0a9-4f68-b0f2-9421545dacf7",
+    "customerName": "Demo",
+    "customerEmail": "demo@gmail.com",
+    "customerPhone": "1234567890",
+    "items": [
+      {
+        "id": "1751530999817",
+        "name": "Demo",
+        "image": "https://m.media-amazon.com/images/I/71d7rfSl0wL._UF1000,1000_QL80_.jpg",
+        "price": 145000,
+        "quantity": 1,
+        "category": "Phones"
+      }
+    ],
+    "shippingAddress": {
+      "address": "Amit Pardeshi",
+      "city": "Demo",
+      "postalCode": "123456",
+      "country": "Indian"
+    },
+    "paymentMethod": "cod",
+    "subtotal": 145000,
+    "deliveryFee": 0,
+    "total": 145000,
+    "paymentStatus": "pending",
+    "status": "pending",
+    "trackingNumber": "TRK1752385803396",
+    "notes": "",
+    "orderDate": "2025-07-13T05:50:03.396Z",
+    "estimatedDelivery": "2025-07-18T05:50:03.396Z"
+  },
+  {
+    "id": "ORD-1752396517907",
+    "customerId": "5fe5de07-b0a9-4f68-b0f2-9421545dacf7",
+    "customerName": "Demo",
+    "customerEmail": "demo@gmail.com",
+    "customerPhone": "1234567890",
+    "items": [
+      {
+        "id": "1751532830321",
+        "name": "Sony LED",
+        "image": "https://www.avitdigital.com/cdn/shop/files/01-43X80L-logo-v2_1024x1024_2x_de8aa809-103d-47c7-a87b-4faf0709cd4e_grande.jpg?v=1683793693",
+        "price": 45000,
+        "quantity": 1,
+        "category": "Computer"
+      }
+    ],
+    "shippingAddress": {
+      "address": "Demo",
+      "city": "Flat no 2",
+      "postalCode": "123456",
+      "country": "Indian"
+    },
+    "paymentMethod": "cod",
+    "subtotal": 45000,
+    "deliveryFee": 0,
+    "total": 45000,
+    "paymentStatus": "pending",
+    "status": "pending",
+    "trackingNumber": "TRK1752396517907",
+    "notes": "",
+    "orderDate": "2025-07-13T08:48:37.907Z",
+    "estimatedDelivery": "2025-07-18T08:48:37.907Z"
   }
 ]
