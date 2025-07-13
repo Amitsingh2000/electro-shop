@@ -9,9 +9,9 @@ import { Card, CardContent } from '../components/ui/card';
 
 export const ProductsPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 300000]);
-  const [sortBy, setSortBy] = useState<string>('name');
+  const [sortBy, setSortBy] = useState('name');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [searchParams] = useSearchParams();
@@ -33,20 +33,23 @@ export const ProductsPage: React.FC = () => {
   }, []);
 
   const categories = useMemo(() => {
-    const categorySet = new Set(products.map(p => p.category));
-    return Array.from(categorySet);
+    const set = new Set(products.map((p) => p.category));
+    return Array.from(set);
   }, [products]);
 
   const filteredProducts = useMemo(() => {
     let filtered = products.filter((product) => {
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const matchesSearch =
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.description.toLowerCase().includes(searchQuery.toLowerCase());
 
-      const matchesCategory = !selectedCategory && !categoryFromUrl ||
+      const matchesCategory =
+        (!selectedCategory && !categoryFromUrl) ||
         product.category === selectedCategory ||
         product.category === categoryFromUrl;
 
-      const matchesPrice = product.currentPrice >= priceRange[0] &&
+      const matchesPrice =
+        product.currentPrice >= priceRange[0] &&
         product.currentPrice <= priceRange[1];
 
       return matchesSearch && matchesCategory && matchesPrice;
@@ -60,7 +63,6 @@ export const ProductsPage: React.FC = () => {
           return b.currentPrice - a.currentPrice;
         case 'rating':
           return b.rating - a.rating;
-        case 'name':
         default:
           return a.name.localeCompare(b.name);
       }
@@ -76,46 +78,42 @@ export const ProductsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="mb-10">
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">
             {searchQuery
               ? `Search results for "${searchQuery}"`
               : categoryFromUrl
-                ? `${categoryFromUrl} Products`
-                : 'All Products'}
+              ? `${categoryFromUrl} Products`
+              : 'All Products'}
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-500 text-sm">
             {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-10">
           {/* Sidebar Filters */}
           <div className="lg:w-64 space-y-6">
             <div className="lg:hidden">
-              <Button
-                onClick={() => setShowFilters(!showFilters)}
-                variant="outline"
-                className="w-full"
-              >
+              <Button onClick={() => setShowFilters(!showFilters)} variant="outline" className="w-full">
                 <FilterIcon className="w-4 h-4 mr-2" />
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
               </Button>
             </div>
 
-            <div className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
+            <div className={`${showFilters ? 'block' : 'hidden lg:block'} space-y-6`}>
               {/* Categories */}
               <Card>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-4">Categories</h3>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Categories</h3>
                   <div className="space-y-2">
                     <button
                       onClick={() => setSelectedCategory('')}
-                      className={`block w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                      className={`block w-full text-left px-3 py-2 rounded-lg ${
                         !selectedCategory && !categoryFromUrl
-                          ? 'bg-blue-100 text-blue-700'
+                          ? 'bg-blue-100 text-blue-700 font-semibold'
                           : 'hover:bg-gray-100'
                       }`}
                     >
@@ -125,9 +123,9 @@ export const ProductsPage: React.FC = () => {
                       <button
                         key={index}
                         onClick={() => setSelectedCategory(category)}
-                        className={`block w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                        className={`block w-full text-left px-3 py-2 rounded-lg ${
                           selectedCategory === category || categoryFromUrl === category
-                            ? 'bg-blue-100 text-blue-700'
+                            ? 'bg-blue-100 text-blue-700 font-semibold'
                             : 'hover:bg-gray-100'
                         }`}
                       >
@@ -141,7 +139,7 @@ export const ProductsPage: React.FC = () => {
               {/* Price Filter */}
               <Card>
                 <CardContent className="p-4">
-                  <h3 className="font-semibold text-gray-900 mb-4">Price Range</h3>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Price Range</h3>
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm text-gray-600 mb-1">Min Price</label>
@@ -165,27 +163,26 @@ export const ProductsPage: React.FC = () => {
                 </CardContent>
               </Card>
 
-              <Button onClick={clearFilters} variant="outline" className="w-full">
+              <Button onClick={clearFilters} variant="ghost" className="w-full text-sm text-red-600 hover:underline">
                 Clear All Filters
               </Button>
             </div>
           </div>
 
-          {/* Products Display */}
+          {/* Main Product List */}
           <div className="flex-1">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg"
-                >
-                  <option value="name">Sort by Name</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="rating">Highest Rated</option>
-                </select>
-              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg"
+              >
+                <option value="name">Sort by Name</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="rating">Highest Rated</option>
+              </select>
+
               <div className="flex items-center space-x-2">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'outline'}
@@ -205,10 +202,10 @@ export const ProductsPage: React.FC = () => {
             </div>
 
             {filteredProducts.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-gray-400 text-6xl mb-4">📦</div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
-                <p className="text-gray-600 mb-4">Try adjusting your filters or search terms</p>
+              <div className="text-center py-20">
+                <div className="text-6xl mb-4">😕</div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">No products found</h2>
+                <p className="text-gray-600 mb-4">Try changing your filters or search keyword.</p>
                 <Button onClick={clearFilters}>Clear Filters</Button>
               </div>
             ) : (

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { XIcon } from 'lucide-react';
- // or just use `clsx()` or your own `cn`
 import { clsx } from 'clsx';
 
 export const Dialog = DialogPrimitive.Root;
@@ -31,10 +30,22 @@ export const DialogContent = React.forwardRef<
 ));
 DialogContent.displayName = 'DialogContent';
 
-export const DialogHeader = ({ children }: { children: React.ReactNode }) => (
-  <div className="mb-4">{children}</div>
+export const DialogHeader = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => (
+  <div className={clsx('mb-4', className)}>{children}</div>
 );
 
-export const DialogTitle = ({ children }: { children: React.ReactNode }) => (
-  <h2 className="text-lg font-semibold">{children}</h2>
+export const DialogTitle = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => (
+  <h2 className={clsx('text-lg font-semibold', className)}>{children}</h2>
 );

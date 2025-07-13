@@ -5,8 +5,8 @@ import {
   DialogHeader,
   DialogTitle
 } from '../components/ui/dialog';
-import { Order } from '../types';
 import { Button } from '../components/ui/button';
+import { Order } from '../types/order';
 
 interface Props {
   order: Order | null;

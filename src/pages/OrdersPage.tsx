@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Order } from '../types/order';
 
-
 export const OrdersPage: React.FC = () => {
   const { token } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -31,7 +30,7 @@ export const OrdersPage: React.FC = () => {
   }, [token]);
 
   if (loading) {
-    return <div className="p-8">Loading your orders...</div>;
+    return <div className="p-8 text-center text-lg text-gray-600">Loading your orders...</div>;
   }
 
   if (orders.length === 0) {
@@ -45,123 +44,149 @@ export const OrdersPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6">My Orders</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-900">My Orders</h1>
 
       <div className="space-y-4">
         {orders.map((order) => (
-          <Card key={order.id}>
-            <CardContent className="p-4 space-y-2">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-600">Order ID: {order.id}</p>
-                  <p className="text-sm text-gray-600">Date: {new Date(order.orderDate).toLocaleString()}</p>
+          <Card key={order.id} className="border border-gray-200 shadow-sm hover:shadow-md transition">
+            <CardContent className="p-5 space-y-3">
+              <div className="flex flex-col md:flex-row justify-between md:items-center gap-2">
+                <div className="text-sm text-gray-600 space-y-1">
+                  <div>Order ID: <span className="font-medium text-gray-800">{order.id}</span></div>
+                  <div>Date: {new Date(order.orderDate).toLocaleString()}</div>
                 </div>
                 <Button variant="outline" onClick={() => setSelectedOrder(order)}>
-                  Details
+                  View Details
                 </Button>
               </div>
-              <div className="flex justify-between text-sm text-gray-700">
-                <span>Status: <strong className="capitalize">{order.status}</strong></span>
-                <span>Payment: <strong className="capitalize">{order.paymentStatus}</strong></span>
-                <span>Total: ₹{order.total.toLocaleString()}</span>
+
+              <div className="flex flex-wrap justify-between gap-4 text-sm text-gray-700 pt-2 border-t mt-3 pt-3">
+                <span>
+                  Status:{' '}
+                  <span className={`capitalize px-2 py-1 rounded text-xs font-medium text-white ${
+                    order.status === 'delivered'
+                      ? 'bg-green-600'
+                      : order.status === 'processing'
+                      ? 'bg-yellow-500'
+                      : 'bg-gray-600'
+                  }`}>
+                    {order.status}
+                  </span>
+                </span>
+
+                <span>
+                  Payment:{' '}
+                  <span className={`capitalize px-2 py-1 rounded text-xs font-medium text-white ${
+                    order.paymentStatus === 'paid' ? 'bg-green-600' : 'bg-red-600'
+                  }`}>
+                    {order.paymentStatus}
+                  </span>
+                </span>
+
+                <span>Total: <strong>₹{order.total.toLocaleString()}</strong></span>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Inline Order Details Modal */}
+      {/* Order Details Modal */}
       {selectedOrder && (
         <Dialog open={true} onOpenChange={() => setSelectedOrder(null)}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-3xl">
             <DialogHeader>
-              <DialogTitle>Order Details</DialogTitle>
+              <DialogTitle className="text-2xl text-gray-900">Order Summary</DialogTitle>
             </DialogHeader>
 
-            <div className="space-y-4 text-sm text-gray-800">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <strong>Order ID:</strong>
-                  <div>{selectedOrder.id}</div>
-                </div>
-                <div>
-                  <strong>Date:</strong>
-                  <div>{new Date(selectedOrder.orderDate).toLocaleString()}</div>
-                </div>
-                <div>
-                  <strong>Customer:</strong>
-                  <div>
-                    {selectedOrder.customerName}<br />
-                    {selectedOrder.customerEmail}<br />
-                    {selectedOrder.customerPhone || '—'}
-                  </div>
-                </div>
-                <div>
-                  <strong>Shipping Address:</strong>
-                  <div>
-                    {selectedOrder.shippingAddress.address}, {selectedOrder.shippingAddress.city}<br />
-                    {selectedOrder.shippingAddress.postalCode}, {selectedOrder.shippingAddress.country}
-                  </div>
-                </div>
-
-                <div>
-                  <strong>Status:</strong> <div className="capitalize">{selectedOrder.status}</div>
-                </div>
-                <div>
-                  <strong>Payment:</strong>
-                  <div>
-                    {selectedOrder.paymentStatus} ({selectedOrder.paymentMethod.toUpperCase()})
-                  </div>
-                </div>
+            <div className="space-y-6 text-sm text-gray-800">
+              {/* Grid Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Info label="Order ID" value={selectedOrder.id} />
+                <Info label="Date" value={new Date(selectedOrder.orderDate).toLocaleString()} />
+                <Info
+                  label="Customer"
+                  value={
+                    <>
+                      {selectedOrder.customerName}<br />
+                      {selectedOrder.customerEmail}<br />
+                      {selectedOrder.customerPhone || '—'}
+                    </>
+                  }
+                />
+                <Info
+                  label="Shipping Address"
+                  value={
+                    <>
+                      {selectedOrder.shippingAddress.address}, {selectedOrder.shippingAddress.city}<br />
+                      {selectedOrder.shippingAddress.postalCode}, {selectedOrder.shippingAddress.country}
+                    </>
+                  }
+                />
+                <Info
+                  label="Status"
+                  value={
+                    <span className={`capitalize px-2 py-1 rounded text-white text-xs font-medium ${
+                      selectedOrder.status === 'delivered'
+                        ? 'bg-green-600'
+                        : selectedOrder.status === 'processing'
+                        ? 'bg-yellow-500'
+                        : 'bg-gray-600'
+                    }`}>
+                      {selectedOrder.status}
+                    </span>
+                  }
+                />
+                <Info
+                  label="Payment"
+                  value={
+                    <>
+                      <span className={`capitalize px-2 py-1 rounded text-white text-xs font-medium ${
+                        selectedOrder.paymentStatus === 'paid' ? 'bg-green-600' : 'bg-red-600'
+                      }`}>
+                        {selectedOrder.paymentStatus}
+                      </span>{' '}
+                      ({selectedOrder.paymentMethod.toUpperCase()})
+                    </>
+                  }
+                />
                 {selectedOrder.trackingNumber && (
-                  <div>
-                    <strong>Tracking Number:</strong>
-                    <div>{selectedOrder.trackingNumber}</div>
-                  </div>
+                  <Info label="Tracking Number" value={selectedOrder.trackingNumber} />
                 )}
                 {selectedOrder.estimatedDelivery && (
-                  <div>
-                    <strong>Estimated Delivery:</strong>
-                    <div>{selectedOrder.estimatedDelivery}</div>
-                  </div>
+                  <Info label="Estimated Delivery" value={selectedOrder.estimatedDelivery} />
                 )}
               </div>
 
+              {/* Items List */}
               <div>
-                <strong>Items:</strong>
-                <ul className="list-disc ml-6 space-y-1 mt-2">
+                <h3 className="font-semibold text-gray-900 mb-2">Items</h3>
+                <ul className="divide-y rounded-lg border overflow-hidden">
                   {selectedOrder.items.map((item, i) => (
-                    <li key={i}>
-                      {item.name} × {item.quantity} – ₹{(item.price * item.quantity).toLocaleString()}
+                    <li key={i} className="flex justify-between items-center p-3 bg-white hover:bg-gray-50">
+                      <span>{item.name} × {item.quantity}</span>
+                      <span className="font-medium">₹{(item.price * item.quantity).toLocaleString()}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="border-t pt-4 space-y-1">
-                <div className="flex justify-between">
-                  <span>Subtotal:</span>
-                  <span>₹{selectedOrder.subtotal.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Delivery Fee:</span>
-                  <span>
-                    {selectedOrder.deliveryFee === 0 ? (
-                      <span className="text-green-600">Free</span>
-                    ) : (
-                      `₹${selectedOrder.deliveryFee}`
-                    )}
-                  </span>
-                </div>
-                <div className="flex justify-between font-bold text-lg">
-                  <span>Total:</span>
-                  <span>₹{selectedOrder.total.toLocaleString()}</span>
-                </div>
+              {/* Summary */}
+              <div className="border-t pt-4 space-y-2">
+                <SummaryRow label="Subtotal" value={`₹${selectedOrder.subtotal.toLocaleString()}`} />
+                <SummaryRow
+                  label="Delivery Fee"
+                  value={
+                    selectedOrder.deliveryFee === 0
+                      ? <span className="text-green-600 font-medium">Free</span>
+                      : `₹${selectedOrder.deliveryFee}`
+                  }
+                />
+                <SummaryRow label="Total" value={`₹${selectedOrder.total.toLocaleString()}`} bold large />
               </div>
 
               {selectedOrder.notes && (
                 <div className="pt-4">
-                  <strong>Notes:</strong>
+                  <h4 className="font-medium text-gray-900 mb-1">Notes</h4>
                   <p>{selectedOrder.notes}</p>
                 </div>
               )}
@@ -178,3 +203,39 @@ export const OrdersPage: React.FC = () => {
     </div>
   );
 };
+
+// 🔹 Helper Components
+
+const Info = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: React.ReactNode;
+}) => (
+  <div>
+    <div className="text-sm text-gray-500 font-medium mb-1">{label}</div>
+    <div className="text-gray-800">{value}</div>
+  </div>
+);
+
+const SummaryRow = ({
+  label,
+  value,
+  bold = false,
+  large = false,
+}: {
+  label: string;
+  value: React.ReactNode;
+  bold?: boolean;
+  large?: boolean;
+}) => (
+  <div className="flex justify-between">
+    <span className={`${bold ? 'font-semibold' : 'text-gray-600'} ${large ? 'text-lg' : ''}`}>
+      {label}
+    </span>
+    <span className={`${bold ? 'font-semibold' : 'text-gray-700'} ${large ? 'text-lg' : ''}`}>
+      {value}
+    </span>
+  </div>
+);

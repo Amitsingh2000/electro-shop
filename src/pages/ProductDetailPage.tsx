@@ -53,8 +53,7 @@ export const ProductDetailPage: React.FC = () => {
   }, [id]);
 
   const isInWishlist = useMemo(() => {
-    if (!product) return false;
-    return wishlist.some(item => Number(item.id) === Number(product.id));
+    return product ? wishlist.some(item => Number(item.id) === Number(product.id)) : false;
   }, [wishlist, product]);
 
   const handleWishlistToggle = () => {
@@ -64,12 +63,12 @@ export const ProductDetailPage: React.FC = () => {
     }
     if (!product) return;
     if (isInWishlist) {
-    removeFromWishlist(product.id);
-    toast.success('Removed from Wishlist');
-  } else {
-    addToWishlist(product);
-    toast.success('Added to Wishlist');
-  }
+      removeFromWishlist(product.id);
+      toast.success('Removed from Wishlist');
+    } else {
+      addToWishlist(product);
+      toast.success('Added to Wishlist');
+    }
   };
 
   const handleAddToCart = () => {
@@ -88,8 +87,8 @@ export const ProductDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex justify-center items-center">
-        <p>Loading product...</p>
+      <div className="min-h-screen flex justify-center items-center text-xl font-semibold">
+        Loading product...
       </div>
     );
   }
@@ -111,28 +110,28 @@ export const ProductDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
         {/* Breadcrumb */}
         <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-8">
-          <Link to="/" className="hover:text-blue-600">Home</Link>
+          <Link to="/" className="hover:text-blue-600 transition-colors">Home</Link>
           <span>/</span>
-          <Link to="/products" className="hover:text-blue-600">Products</Link>
+          <Link to="/products" className="hover:text-blue-600 transition-colors">Products</Link>
           <span>/</span>
-          <Link to={`/products?category=${product.category}`} className="hover:text-blue-600">{product.category}</Link>
+          <Link to={`/products?category=${product.category}`} className="hover:text-blue-600 transition-colors">{product.category}</Link>
           <span>/</span>
           <span className="text-gray-900">{product.name}</span>
         </nav>
 
-        <Link to="/products" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8">
+        <Link to="/products" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-8 transition-colors">
           <ArrowLeftIcon className="w-4 h-4 mr-2" />
           Back to Products
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+            <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-lg">
               <img src={productImages[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
             </div>
             <div className="grid grid-cols-3 gap-4">
@@ -140,7 +139,9 @@ export const ProductDetailPage: React.FC = () => {
                 <button
                   key={i}
                   onClick={() => setSelectedImage(i)}
-                  className={`aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 transition-all duration-200 ${selectedImage === i ? 'border-blue-500' : 'border-transparent'}`}
+                  className={`aspect-square bg-gray-100 rounded-xl overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${
+                    selectedImage === i ? 'border-blue-500' : 'border-transparent'
+                  }`}
                 >
                   <img src={img} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
                 </button>
@@ -151,11 +152,11 @@ export const ProductDetailPage: React.FC = () => {
           {/* Product Info */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <Badge variant="secondary">{product.category}</Badge>
+              <Badge variant="secondary" className="uppercase tracking-wide">{product.category}</Badge>
               <div className="flex items-center space-x-2">
                 <button
                   onClick={handleWishlistToggle}
-                  className="relative p-2 rounded-lg hover:bg-gray-100 transition group"
+                  className="relative p-2 rounded-full hover:bg-gray-100 transition"
                   title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
                 >
                   <HeartIcon
@@ -163,11 +164,8 @@ export const ProductDetailPage: React.FC = () => {
                       isInWishlist ? 'text-red-500 fill-red-500' : 'text-gray-600'
                     }`}
                   />
-                  {isInWishlist && (
-                    <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                  )}
                 </button>
-                <button className="p-2 hover:bg-gray-100 rounded-lg" title="Share">
+                <button className="p-2 hover:bg-gray-100 rounded-full" title="Share">
                   <ShareIcon className="w-5 h-5 text-gray-600" />
                 </button>
               </div>
@@ -273,7 +271,7 @@ export const ProductDetailPage: React.FC = () => {
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <section>
+          <section className="mt-16">
             <h2 className="text-2xl font-bold text-gray-900 mb-8">Related Products</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((relatedProduct) => (

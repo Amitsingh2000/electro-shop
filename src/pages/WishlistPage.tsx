@@ -102,14 +102,6 @@ export const WishlistPage: React.FC = () => {
 
                   <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <div className="space-y-2">
-                      <Button
-                        onClick={() => addToCartAndRemove(item)}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                        size="sm"
-                      >
-                        <ShoppingCartIcon className="w-4 h-4 mr-2" />
-                        Add to Cart
-                      </Button>
                       <Link to={`/product/${item.id}`}>
                         <Button variant="outline" className="w-full bg-white" size="sm">
                           View Details
