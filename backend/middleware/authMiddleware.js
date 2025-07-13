@@ -12,10 +12,13 @@ exports.protect = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
     const users = readUsers();
-    const user = users.find(u => u.id === decoded.id); // Fix here too!
+
+    // ✅ Use 'decoded.id', not 'decoded.userId'
+    const user = users.find(u => u.id === decoded.id);
+
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    req.user = user;
+    req.user = user; // Attach to req object
     next();
   } catch (err) {
     res.status(401).json({ message: 'Token failed' });

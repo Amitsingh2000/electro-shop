@@ -1,6 +1,6 @@
 const { readData, writeData } = require('../utils/fileHelper');
 
-// GET all orders
+// GET all orders (admin only)
 exports.getAllOrders = (req, res) => {
   const orders = readData('orders.json');
   res.json(orders);
@@ -14,11 +14,20 @@ exports.getOrderById = (req, res) => {
   res.json(order);
 };
 
-// POST create new order
+exports.getMyOrders = (req, res) => {
+  const orders = readData('orders.json');
+  const user = req.user;
+
+  if (!user) return res.status(401).json({ message: 'Unauthorized' });
+
+  const userOrders = orders.filter(order => order.customerId === user.id);
+  res.json(userOrders);
+};
+
+// CREATE a new order
 exports.createOrder = (req, res) => {
   const orders = readData('orders.json');
-  const user = req.user; // Comes from protect middleware
-
+  const user = req.user;
   if (!user) return res.status(401).json({ message: 'Unauthorized' });
 
   const {
@@ -56,7 +65,7 @@ exports.createOrder = (req, res) => {
     trackingNumber: `TRK${Date.now()}`,
     notes,
     orderDate: new Date().toISOString(),
-    estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
+    estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
   };
 
   orders.push(newOrder);
@@ -65,13 +74,11 @@ exports.createOrder = (req, res) => {
   res.status(201).json(newOrder);
 };
 
-// PUT update order
+// UPDATE an order
 exports.updateOrder = (req, res) => {
-  let orders = readData('orders.json');
+  const orders = readData('orders.json');
   const index = orders.findIndex(o => o.id === req.params.id);
-
-  if (index === -1)
-    return res.status(404).json({ message: 'Order not found' });
+  if (index === -1) return res.status(404).json({ message: 'Order not found' });
 
   orders[index] = { ...orders[index], ...req.body };
   writeData('orders.json', orders);
@@ -79,14 +86,13 @@ exports.updateOrder = (req, res) => {
   res.json({ message: 'Order updated', order: orders[index] });
 };
 
-// DELETE order
+// DELETE an order
 exports.deleteOrder = (req, res) => {
-  let orders = readData('orders.json');
-  const filtered = orders.filter(o => o.id !== req.params.id);
-
-  if (filtered.length === orders.length)
+  const orders = readData('orders.json');
+  const updated = orders.filter(o => o.id !== req.params.id);
+  if (updated.length === orders.length)
     return res.status(404).json({ message: 'Order not found' });
 
-  writeData('orders.json', filtered);
+  writeData('orders.json', updated);
   res.json({ message: 'Order deleted' });
 };

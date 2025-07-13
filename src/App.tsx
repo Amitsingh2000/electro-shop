@@ -12,6 +12,9 @@ import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { AdminPage } from './pages/AdminPage';
 import { ToastContainer } from 'react-toastify';
+import { ProfilePage } from './pages/ProfilePage';
+import { OrdersPage } from './pages/OrdersPage';
+import { WishlistPage } from './pages/WishlistPage';
 
 function App() {
   return (
@@ -32,10 +35,11 @@ function App() {
                 <Route path="/admin" element={<AdminPage />} />
                 <Route path="/about" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold">About Page</h1></div>} />
                 <Route path="/contact" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold">Contact Page</h1></div>} />
-                <Route path="/profile" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold">Profile Page</h1></div>} />
-                <Route path="/orders" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold">Orders Page</h1></div>} />
-                <Route path="/wishlist" element={<div className="min-h-screen flex items-center justify-center"><h1 className="text-2xl font-bold">Wishlist Page</h1></div>} />
-              </Routes>
+               <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/orders" element={<OrdersPage />} />
+                <Route path="/wishlist" element={<WishlistPage />} />
+                
+               </Routes>
               <ToastContainer position="top-right" autoClose={3000} />
             </main>
             <Footer />
